@@ -333,7 +333,16 @@ public class OrderService {
         String cleanSearch = (search != null && !search.trim().isEmpty()) ? search.trim() : null;
         String cleanStatus = (status != null && !status.trim().isEmpty() && !status.equalsIgnoreCase("all")) ? status.trim() : null;
 
-        Page<Order> page = orderRepository.searchOrders(cleanSearch, cleanStatus, pageable);
+        Page<Order> page;
+        if (cleanSearch == null && cleanStatus == null) {
+            page = orderRepository.findAll(pageable);
+        } else if (cleanSearch == null) {
+            page = orderRepository.findByStatusIgnoreCase(cleanStatus, pageable);
+        } else if (cleanStatus == null) {
+            page = orderRepository.searchByKeyword(cleanSearch, pageable);
+        } else {
+            page = orderRepository.searchByKeywordAndStatus(cleanSearch, cleanStatus, pageable);
+        }
         return page.map(this::mapToDto);
     }
 

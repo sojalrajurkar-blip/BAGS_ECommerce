@@ -26,9 +26,15 @@ public interface OrderRepository extends JpaRepository<Order, String> {
     Page<Order> findByStatusIgnoreCase(String status, Pageable pageable);
 
     @Query("SELECT o FROM Order o WHERE " +
-           "(:search IS NULL OR LOWER(o.orderNumber) LIKE LOWER(CONCAT('%', :search, '%')) " +
+           "LOWER(o.orderNumber) LIKE LOWER(CONCAT('%', :search, '%')) " +
+           "OR LOWER(o.customerName) LIKE LOWER(CONCAT('%', :search, '%')) " +
+           "OR LOWER(o.customerEmail) LIKE LOWER(CONCAT('%', :search, '%'))")
+    Page<Order> searchByKeyword(@Param("search") String search, Pageable pageable);
+
+    @Query("SELECT o FROM Order o WHERE " +
+           "(LOWER(o.orderNumber) LIKE LOWER(CONCAT('%', :search, '%')) " +
            "OR LOWER(o.customerName) LIKE LOWER(CONCAT('%', :search, '%')) " +
            "OR LOWER(o.customerEmail) LIKE LOWER(CONCAT('%', :search, '%'))) " +
-           "AND (:status IS NULL OR LOWER(o.status) = LOWER(:status))")
-    Page<Order> searchOrders(@Param("search") String search, @Param("status") String status, Pageable pageable);
+           "AND LOWER(o.status) = LOWER(:status)")
+    Page<Order> searchByKeywordAndStatus(@Param("search") String search, @Param("status") String status, Pageable pageable);
 }

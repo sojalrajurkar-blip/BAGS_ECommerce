@@ -33,9 +33,9 @@ SELECT 'role-admin', id FROM permissions
 ON CONFLICT DO NOTHING;
 
 -- 4. Seed Default Admin User
--- Password: "AdminPassword123!" (BCrypt hashed with cost factor 12)
+-- Password: "Password123!" (BCrypt hashed with cost factor 12)
 INSERT INTO users (id, email, password_hash, name, status, avatar_url, last_active, created_at, updated_at) VALUES
-    ('user-admin-root', 'admin@rora-luxury.com', '$2a$12$Z0wNnE9jRzZqZq7hY1v6CeK6w0k7h9v6CeK6w0k7h9v6CeK6w0k7h', 'RÓRA Administrator', 'ACTIVE', 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=400', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+    ('user-admin-root', 'admin@rora-luxury.com', '$2a$12$Srwzky6lNG6G3o6GrOu9O.jRGLcdk/hQTMpZGNQQdxf6V2/iCFRHS', 'RÓRA Administrator', 'ACTIVE', 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=400', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
 ON CONFLICT (email) DO NOTHING;
 
 -- 5. Assign ROLE_ADMIN to Default Admin User
