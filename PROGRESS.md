@@ -1,14 +1,14 @@
 # RÓRA — Luxury Bags & Carry Essentials
 ## Project Implementation Progress & Architecture State
 
-**Last Updated:** October 1, 2026  
+**Last Updated:** October 2, 2026  
 **Architecture:** Next.js 16 (App Router) Frontend + Spring Boot 3.4+ (Java 21 LTS) + PostgreSQL 18.4 + Maven + Docker  
 **Git Repository:** `https://github.com/sojalrajurkar-blip/BAGS_ECommerce.git` (Branch: `main`)  
 **Authoritative Master Specifications:**
 - Master Prompt: [`prompts/RORA_Antigravity_Backend_Implementation_Prompt.md`](file:///d:/ProjectFolder/RORA/prompts/RORA_Antigravity_Backend_Implementation_Prompt.md)
 - Software Requirements Specification: [`prompts/RORA_Backend_SRS.md`](file:///d:/ProjectFolder/RORA/prompts/RORA_Backend_SRS.md)
 
-**Backend Status:** Phases 0 through 10 Completed (134/134 tests passing, 100% pass rate). Ready for Phase 11 (Reviews).
+**Backend Status:** Phases 0 through 11 Completed (153/153 tests passing, 100% pass rate). Ready for Phase 12 (CMS & Settings).
 
 ---
 
@@ -70,7 +70,7 @@
   - `POST /api/v1/checkout/place-order`
   - `GET /api/v1/orders/my-orders`, `GET /api/v1/orders/{idOrNumber}`, `PUT /api/v1/orders/{idOrNumber}/cancel`
   - `GET /api/v1/admin/orders`, `PUT /api/v1/admin/orders/{id}/status`, `PUT /api/v1/admin/orders/{id}/tracking`
-- Seeded historical luxury orders (`#RRA89241`, `#RRA89105`, `#RRA88940`) via `V5__seed_orders.sql`.
+  - Seeded historical luxury orders (`#RRA89241`, `#RRA89105`, `#RRA88940`) via `V5__seed_orders.sql`.
 
 #### ✅ Phase 6: Customer Accounts, Addresses, Profiles & Admin Customer 360
 - `Customer` and `CustomerAddress` JPA domain entities with multi-address management.
@@ -95,8 +95,8 @@
 - Dynamic low-stock threshold alert system and real-time synchronization with `Product` and `ProductVariant` catalog stock.
 - Integration with `OrderService` for automatic sale movement recording on checkout and restoral movements on order cancellation.
 - Admin Warehousing & Stock Management APIs (`/api/v1/admin/inventory`):
-  - `GET /api/v1/admin/inventory/summary` — Key KPI health metrics (total SKUs, available units, reserved units, low-stock count, out-of-stock count, recent movements).
-  - `GET /api/v1/admin/inventory` — Paginated inventory search by keyword, status (`IN_STOCK`, `LOW_STOCK`, `OUT_OF_STOCK`), and category.
+  - `GET /api/v1/admin/inventory/summary` — Key KPI health metrics.
+  - `GET /api/v1/admin/inventory` — Paginated inventory search by keyword, status, and category.
   - `GET /api/v1/admin/inventory/low-stock` — Real-time stream of low-stock alerts.
   - `GET /api/v1/admin/inventory/{idOrSku}` — Single inventory item details.
   - `POST /api/v1/admin/inventory/adjust` — Atomic stock adjustment with automated movement ledger logging.
@@ -104,7 +104,8 @@
   - `PUT /api/v1/admin/inventory/{idOrSku}/threshold` — Update low stock alerts threshold and warehouse bin locations.
   - `GET /api/v1/admin/inventory/movements` — Global paginated movement audit ledger.
   - `GET /api/v1/admin/inventory/{idOrSku}/movements` — Per-item SKU movement audit trail.
-- Flyway migration `V7__seed_inventory_and_movements.sql` with full master inventory ledger and baseline restock logs.
+- Flyway migration `V7__seed_inventory_and_movements.sql` with full master inventory ledger.
+
 #### ✅ Phase 8: Local Mock Payments, Transactions Ledger & Refund Engine
 - `Payment` and `PaymentTransaction` JPA domain entities with comprehensive payment lifecycle management.
 - Complete payment states: `INITIATED`, `PENDING`, `SUCCESS`, `FAILED`, `CANCELLED`, `REFUNDED`.
@@ -112,71 +113,89 @@
   - Supported methods: `CARD`, `UPI`, `NETBANKING`, `WALLET`, `COD`.
   - Realistic latency and idempotency handling via `idempotencyKey`.
   - Deterministic testing simulations: `APPROVE`, `DECLINE_INSUFFICIENT_FUNDS`, `DECLINE_EXPIRED_CARD`, `TIMEOUT`, `FRAUD_ALERT`.
-- Automatic synchronization with `Order` and `OrderTimelineEvent` (payment status update, automatic timeline progression to `PAYMENT_VERIFIED` upon success).
+- Automatic synchronization with `Order` and `OrderTimelineEvent`.
 - Full refund engine: supports full and partial refunds with balance tracking, ledger audit logging, and automated order timeline status updates.
 - Public & Customer Payment APIs (`/api/v1/payments`):
-  - `POST /api/v1/payments/initiate` — Initiate checkout payment session with idempotency guarantee.
-  - `POST /api/v1/payments/process` — Process/execute simulated payment attempt.
+  - `POST /api/v1/payments/initiate` — Initiate checkout payment session.
+  - `POST /api/v1/payments/process` — Process simulated payment attempt.
   - `GET /api/v1/payments/{paymentId}` — Retrieve payment and transaction ledger by payment ID.
-  - `GET /api/v1/payments/order/{orderIdOrNumber}` — Lookup payment record for a given order number/ID.
+  - `GET /api/v1/payments/order/{orderIdOrNumber}` — Lookup payment record for an order.
 - Admin Payment Management & Analytics APIs (`/api/v1/admin/payments`):
-  - `GET /api/v1/admin/payments/summary` — High-level payment financial KPIs (gross volume, successful transactions, pending count, refunded volume, success rate %).
+  - `GET /api/v1/admin/payments/summary` — High-level payment financial KPIs.
   - `GET /api/v1/admin/payments` — Paginated search and filtering by status, method, order ID, and date range.
   - `POST /api/v1/admin/payments/{paymentId}/refund` — Admin refund execution with reason and transaction logging.
-- Flyway migration `V8__seed_payments.sql` seeding historical payment transactions for all luxury test orders.
+- Flyway migration `V8__seed_payments.sql` seeding historical payment transactions.
+
 #### ✅ Phase 9: Shipping, Consignments, Carrier Tracking & Milestone Events Engine
 - `Shipment` and `ShipmentEvent` JPA domain entities with complete delivery lifecycle tracking.
 - Full consignment statuses: `CREATED`, `MANIFESTED`, `PICKED_UP`, `IN_TRANSIT`, `OUT_FOR_DELIVERY`, `DELIVERED`, `FAILED_DELIVERY`, `RETURNED_TO_ORIGIN`, `CANCELLED`.
 - Dual tracking lookup engine: supports live lookup by AWB tracking number or Order number (`#RRA...` or raw digits) with automatic fallback synthesis from order timeline.
-- Deep bidirectional synchronization with `Order` and `OrderTimelineEvent` (automatically updates order carrier, tracking number, estimated delivery, status, and appends timestamped fulfillment events).
+- Deep bidirectional synchronization with `Order` and `OrderTimelineEvent`.
 - Public & Customer Shipping APIs (`/api/v1/shipments`):
   - `GET /api/v1/shipments/track/{trackingCodeOrOrderNumber}` — Real-time live tracking with milestone events and package contents.
   - `GET /api/v1/shipments/order/{orderIdOrNumber}` — List all shipments associated with an order.
   - `GET /api/v1/shipments/{id}` — Get single shipment consignment details.
   - `GET /api/v1/shipments/awb/{awbNumber}` — Lookup shipment by AWB code.
 - Admin Consignments & Carrier Operations APIs (`/api/v1/admin/shipments`):
-  - `GET /api/v1/admin/shipments/summary` — Shipping KPI metrics (total shipments, pending dispatch, in-transit, out for delivery, delivered, delivery exceptions).
+  - `GET /api/v1/admin/shipments/summary` — Shipping KPI metrics.
   - `GET /api/v1/admin/shipments` — Paginated search by AWB, order #, customer, courier partner, destination, and status filter.
   - `POST /api/v1/admin/shipments` — Create and dispatch new consignment for an order.
-  - `POST /api/v1/admin/shipments/{id}/events` — Record new tracking milestone event (auto-updates delivery status and order timeline).
+  - `POST /api/v1/admin/shipments/{id}/events` — Record new tracking milestone event.
   - `PUT /api/v1/admin/shipments/{id}/status` — Quick status transition.
 - Flyway migration `V9__seed_shipments.sql` seeding historical consignments and realistic milestone scan events.
+
 #### ✅ Phase 10: Returns, Refunds, Quality Inspection & Payment Linkage Engine
 - `ReturnRequest`, `ReturnItem`, and `RefundRecord` JPA domain entities with robust return lifecycle tracking.
-- Complete state machines:
-  - Return States: `REQUESTED`, `UNDER_REVIEW`, `APPROVED`, `PICKUP_SCHEDULED`, `RECEIVED_AT_HUB`, `INSPECTED`, `APPROVED_AND_REFUNDED`, `REJECTED`, `CANCELLED`.
-  - Inspection States: `PENDING_DELIVERY`, `AWAITING_HUB_DELIVERY`, `PASSED_PRISTINE`, `PASSED_WITH_CONDITIONS`, `FAILED_POLICY_CHECK`, `REJECTED_DAMAGED`.
-  - Refund States: `INITIATED`, `PROCESSING`, `COMPLETED`, `FAILED`, `CANCELLED`.
-- Strict state transition validation: validates legal state transitions and prevents approving/rejecting already finalized returns.
-- Direct linkage to `Payment` & `PaymentTransaction` double-entry ledger: approving a return with auto-refund automatically creates a `RefundRecord`, settles payment status to `REFUNDED`, records a refund transaction, and updates order timeline events.
+- Complete state machines: `ReturnStatus`, `InspectionStatus`, and `RefundStatus`.
+- Direct linkage to `Payment` & `PaymentTransaction` double-entry ledger.
 - Customer & Public Return APIs (`/api/v1/returns`):
-  - `POST /api/v1/returns` — Submit return request for an order with multi-item selection and reasons.
+  - `POST /api/v1/returns` — Submit return request for an order.
   - `GET /api/v1/returns/my-returns` — List authenticated customer return requests.
   - `GET /api/v1/returns/{id}` — Get single return request details.
   - `GET /api/v1/returns/order/{orderIdOrNumber}` — Lookup return requests for an order.
 - Admin Returns & Refunds Operations APIs (`/api/v1/admin/returns`, `/api/v1/admin/refunds`):
-  - `GET /api/v1/admin/returns/summary` — Returns & financial reimbursement KPI metrics (total requests, under review, approved & refunded, rejected, total refund payout).
-  - `GET /api/v1/admin/returns` — Paginated search by return ID, order #, customer, item, and status filter.
+  - `GET /api/v1/admin/returns/summary` — Returns & financial reimbursement KPI metrics.
+  - `GET /api/v1/admin/returns` — Paginated search.
   - `GET /api/v1/admin/returns/{id}` — Full return details with item breakdown and linked refund.
   - `POST /api/v1/admin/returns/{id}/approve` — Approve return, set inspection grade, and trigger automatic banking refund.
   - `POST /api/v1/admin/returns/{id}/reject` — Reject return with policy failure rationale.
   - `PUT /api/v1/admin/returns/{id}/inspection` — Physical atelier inspection grade update.
   - `GET /api/v1/admin/refunds` — Paginated audit list of all refund financial transactions.
   - `POST /api/v1/admin/refunds` — Issue manual / goodwill financial reimbursement.
-- Flyway migration `V10__seed_returns_and_refunds.sql` seeding historical return requests (`ret-104`, `ret-105`) and refund records (`ref-801`, `ref-800`).
-- Full test suite passing: **134/134 tests passing (100% pass rate)**.
+- Flyway migration `V10__seed_returns_and_refunds.sql` seeding historical return requests and refund records.
+
+#### ✅ Phase 11: Reviews & Ratings Engine
+- `Review` JPA domain entity with complete moderation lifecycle (`PUBLISHED`, `PENDING_MODERATION`, `FLAGGED`, `ARCHIVED`, `REJECTED`).
+- Automated verified purchase badge detection via customer order history.
+- Real-time bidirectional product rating and review count recalculation.
+- Public & Customer Review APIs (`/api/v1/reviews`):
+  - `POST /api/v1/reviews` — Submit customer product review with ratings, title, and comments.
+  - `GET /api/v1/reviews/product/{productIdOrSlug}` — Paginated reviews for PDP.
+  - `GET /api/v1/reviews/product/{productIdOrSlug}/summary` — Aggregate star breakdown (1..5 stars) and average score for PDP.
+  - `GET /api/v1/reviews/featured` — Curated editorial customer reviews.
+  - `GET /api/v1/reviews/my` — Current customer's authored reviews.
+  - `GET /api/v1/reviews/{id}` — Single review lookup.
+  - `POST /api/v1/reviews/{id}/helpful` — Upvote review helpfulness counter.
+- Admin Review Moderation & Analytics APIs (`/api/v1/admin/reviews`):
+  - `GET /api/v1/admin/reviews/summary` — Dashboard KPI metrics (total, published, pending, flagged, archived, average rating).
+  - `GET /api/v1/admin/reviews` — Paginated search by text and status filter.
+  - `GET /api/v1/admin/reviews/{id}` — Full review moderation view.
+  - `PUT /api/v1/admin/reviews/{id}/moderate` — Moderate status, update editorial feature flag, and save moderation notes.
+  - `PATCH /api/v1/admin/reviews/{id}/status` — Status transition shortcut.
+  - `DELETE /api/v1/admin/reviews/{id}` — Remove review and adjust product metrics.
+- Flyway migration `V11__seed_reviews.sql` seeding initial verified customer and editorial reviews (`rev-1`, `rev-2`, `rev-3`).
+- Full test suite passing: **153/153 tests passing (100% pass rate)**.
 
 ---
 
-### 2. Canonical Roadmap (Phases 11 — 17)
+### 2. Canonical Roadmap (Phases 12 — 17)
 
-1. **Phase 11: Reviews** — Product reviews, star ratings, verified purchase badges, review moderation & admin actions.
-2. **Phase 12: CMS & Settings** — Homepage banners, journal articles, FAQ items, store settings key-value store.
-3. **Phase 13: Admin Platform** — Consolidated admin dashboard, analytics KPIs, audit logs, granular permissions matrix.
-4. **Phase 14: Frontend Repository Migration** — Wire Next.js repository layer to Spring Boot backend APIs, preserve all animations/UI.
-5. **Phase 15: Full Local QA** — End-to-end customer and admin test matrix, failure scenarios, concurrency checks.
-6. **Phase 16: Production Preparation** — Docker containerization, CI/CD pipelines, cloud PostgreSQL plan, secrets management.
-7. **Phase 17: Production Deployment** — Deployment execution and live smoke test verification.
+1. **Phase 12: CMS & Settings** — Homepage banners, journal articles, FAQ items, store settings key-value store.
+2. **Phase 13: Admin Platform** — Consolidated admin dashboard, analytics KPIs, audit logs, granular permissions matrix.
+3. **Phase 14: Frontend Repository Migration** — Wire Next.js repository layer to Spring Boot backend APIs, preserve all animations/UI.
+4. **Phase 15: Full Local QA** — End-to-end customer and admin test matrix, failure scenarios, concurrency checks.
+5. **Phase 16: Production Preparation** — Docker containerization, CI/CD pipelines, cloud PostgreSQL plan, secrets management.
+6. **Phase 17: Production Deployment** — Deployment execution and live smoke test verification.
 
 ---
 

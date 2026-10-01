@@ -86,6 +86,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/checkout/**").permitAll()
                         .requestMatchers("/api/v1/payments/**").permitAll()
                         .requestMatchers("/api/v1/returns/**").permitAll()
+                        .requestMatchers("/api/v1/reviews/**").permitAll()
 
                         // Admin Protected Endpoints
                         .requestMatchers("/api/v1/admin/**").hasAnyRole("ADMIN", "MANAGER", "PRODUCT_MANAGER", "ORDER_MANAGER", "MARKETING_MANAGER")
