@@ -44,6 +44,16 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 
+    @ExceptionHandler({
+            org.springframework.security.authentication.BadCredentialsException.class,
+            org.springframework.security.core.AuthenticationException.class
+    })
+    public ResponseEntity<ApiResponse<Void>> handleAuthenticationException(
+            Exception ex, HttpServletRequest request) {
+        ApiResponse<Void> response = ApiResponse.error("Invalid credentials: " + ex.getMessage(), null, request.getRequestURI());
+        return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> handleGlobalException(
             Exception ex, HttpServletRequest request) {

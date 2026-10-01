@@ -2,7 +2,9 @@ package com.rora.backend.common;
 
 import jakarta.persistence.*;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.experimental.SuperBuilder;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -10,6 +12,8 @@ import java.util.UUID;
 @Getter
 @Setter
 @MappedSuperclass
+@SuperBuilder
+@NoArgsConstructor
 public abstract class BaseEntity {
 
     @Id
@@ -28,8 +32,12 @@ public abstract class BaseEntity {
             this.id = UUID.randomUUID().toString();
         }
         Instant now = Instant.now();
-        this.createdAt = now;
-        this.updatedAt = now;
+        if (this.createdAt == null) {
+            this.createdAt = now;
+        }
+        if (this.updatedAt == null) {
+            this.updatedAt = now;
+        }
     }
 
     @PreUpdate
