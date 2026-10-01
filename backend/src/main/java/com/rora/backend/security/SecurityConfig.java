@@ -73,6 +73,7 @@ public class SecurityConfig {
                         // Public Catalog & Content Read Endpoints
                         .requestMatchers(HttpMethod.GET, "/api/v1/products/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/categories/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/coupons/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/cms/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/settings/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/reviews/**").permitAll()
@@ -84,7 +85,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/payments/process-mock").permitAll()
 
                         // Admin Protected Endpoints
-                        .requestMatchers("/api/v1/admin/**").hasAnyRole("ADMIN", "MANAGER", "PRODUCT_MANAGER", "ORDER_MANAGER")
+                        .requestMatchers("/api/v1/admin/**").hasAnyRole("ADMIN", "MANAGER", "PRODUCT_MANAGER", "ORDER_MANAGER", "MARKETING_MANAGER")
 
                         // Authenticated Customer Endpoints
                         .requestMatchers("/api/v1/account/**").authenticated()
