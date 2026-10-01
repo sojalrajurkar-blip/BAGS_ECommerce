@@ -8,7 +8,7 @@
 - Master Prompt: [`prompts/RORA_Antigravity_Backend_Implementation_Prompt.md`](file:///d:/ProjectFolder/RORA/prompts/RORA_Antigravity_Backend_Implementation_Prompt.md)
 - Software Requirements Specification: [`prompts/RORA_Backend_SRS.md`](file:///d:/ProjectFolder/RORA/prompts/RORA_Backend_SRS.md)
 
-**Backend Status:** Phases 0 through 9 Completed (119/119 tests passing, 100% pass rate). Ready for Phase 10 (Returns & Refunds).
+**Backend Status:** Phases 0 through 10 Completed (134/134 tests passing, 100% pass rate). Ready for Phase 11 (Reviews).
 
 ---
 
@@ -141,20 +141,42 @@
   - `POST /api/v1/admin/shipments/{id}/events` — Record new tracking milestone event (auto-updates delivery status and order timeline).
   - `PUT /api/v1/admin/shipments/{id}/status` — Quick status transition.
 - Flyway migration `V9__seed_shipments.sql` seeding historical consignments and realistic milestone scan events.
-- Full test suite passing: **119/119 tests passing (100% pass rate)**.
+#### ✅ Phase 10: Returns, Refunds, Quality Inspection & Payment Linkage Engine
+- `ReturnRequest`, `ReturnItem`, and `RefundRecord` JPA domain entities with robust return lifecycle tracking.
+- Complete state machines:
+  - Return States: `REQUESTED`, `UNDER_REVIEW`, `APPROVED`, `PICKUP_SCHEDULED`, `RECEIVED_AT_HUB`, `INSPECTED`, `APPROVED_AND_REFUNDED`, `REJECTED`, `CANCELLED`.
+  - Inspection States: `PENDING_DELIVERY`, `AWAITING_HUB_DELIVERY`, `PASSED_PRISTINE`, `PASSED_WITH_CONDITIONS`, `FAILED_POLICY_CHECK`, `REJECTED_DAMAGED`.
+  - Refund States: `INITIATED`, `PROCESSING`, `COMPLETED`, `FAILED`, `CANCELLED`.
+- Strict state transition validation: validates legal state transitions and prevents approving/rejecting already finalized returns.
+- Direct linkage to `Payment` & `PaymentTransaction` double-entry ledger: approving a return with auto-refund automatically creates a `RefundRecord`, settles payment status to `REFUNDED`, records a refund transaction, and updates order timeline events.
+- Customer & Public Return APIs (`/api/v1/returns`):
+  - `POST /api/v1/returns` — Submit return request for an order with multi-item selection and reasons.
+  - `GET /api/v1/returns/my-returns` — List authenticated customer return requests.
+  - `GET /api/v1/returns/{id}` — Get single return request details.
+  - `GET /api/v1/returns/order/{orderIdOrNumber}` — Lookup return requests for an order.
+- Admin Returns & Refunds Operations APIs (`/api/v1/admin/returns`, `/api/v1/admin/refunds`):
+  - `GET /api/v1/admin/returns/summary` — Returns & financial reimbursement KPI metrics (total requests, under review, approved & refunded, rejected, total refund payout).
+  - `GET /api/v1/admin/returns` — Paginated search by return ID, order #, customer, item, and status filter.
+  - `GET /api/v1/admin/returns/{id}` — Full return details with item breakdown and linked refund.
+  - `POST /api/v1/admin/returns/{id}/approve` — Approve return, set inspection grade, and trigger automatic banking refund.
+  - `POST /api/v1/admin/returns/{id}/reject` — Reject return with policy failure rationale.
+  - `PUT /api/v1/admin/returns/{id}/inspection` — Physical atelier inspection grade update.
+  - `GET /api/v1/admin/refunds` — Paginated audit list of all refund financial transactions.
+  - `POST /api/v1/admin/refunds` — Issue manual / goodwill financial reimbursement.
+- Flyway migration `V10__seed_returns_and_refunds.sql` seeding historical return requests (`ret-104`, `ret-105`) and refund records (`ref-801`, `ref-800`).
+- Full test suite passing: **134/134 tests passing (100% pass rate)**.
 
 ---
 
-### 2. Canonical Roadmap (Phases 10 — 17)
+### 2. Canonical Roadmap (Phases 11 — 17)
 
-1. **Phase 10: Returns & Refunds** — Return requests workflow (`RETURN_REQUESTED` → `RETURN_APPROVED` → `RETURN_RECEIVED`), refund records linked to payments.
-2. **Phase 11: Reviews** — Product reviews, star ratings, verified purchase badges, review moderation & admin actions.
-3. **Phase 12: CMS & Settings** — Homepage banners, journal articles, FAQ items, store settings key-value store.
-4. **Phase 13: Admin Platform** — Consolidated admin dashboard, analytics KPIs, audit logs, granular permissions matrix.
-5. **Phase 14: Frontend Repository Migration** — Wire Next.js repository layer to Spring Boot backend APIs, preserve all animations/UI.
-6. **Phase 15: Full Local QA** — End-to-end customer and admin test matrix, failure scenarios, concurrency checks.
-7. **Phase 16: Production Preparation** — Docker containerization, CI/CD pipelines, cloud PostgreSQL plan, secrets management.
-8. **Phase 17: Production Deployment** — Deployment execution and live smoke test verification.
+1. **Phase 11: Reviews** — Product reviews, star ratings, verified purchase badges, review moderation & admin actions.
+2. **Phase 12: CMS & Settings** — Homepage banners, journal articles, FAQ items, store settings key-value store.
+3. **Phase 13: Admin Platform** — Consolidated admin dashboard, analytics KPIs, audit logs, granular permissions matrix.
+4. **Phase 14: Frontend Repository Migration** — Wire Next.js repository layer to Spring Boot backend APIs, preserve all animations/UI.
+5. **Phase 15: Full Local QA** — End-to-end customer and admin test matrix, failure scenarios, concurrency checks.
+6. **Phase 16: Production Preparation** — Docker containerization, CI/CD pipelines, cloud PostgreSQL plan, secrets management.
+7. **Phase 17: Production Deployment** — Deployment execution and live smoke test verification.
 
 ---
 

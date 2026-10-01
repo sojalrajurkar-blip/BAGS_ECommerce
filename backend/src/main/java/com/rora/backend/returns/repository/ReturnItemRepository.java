@@ -1,0 +1,13 @@
+package com.rora.backend.returns.repository;
+
+import com.rora.backend.returns.entity.ReturnItem;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+
+@Repository
+public interface ReturnItemRepository extends JpaRepository<ReturnItem, Long> {
+
+    List<ReturnItem> findByReturnRequestId(String returnId);
+}
