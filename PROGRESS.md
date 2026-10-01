@@ -168,3 +168,4 @@
 - `15a2c07` — *feat(customer): implement Phase 6 customer accounts, saved addresses, profile management & Admin Customer 360*
 - `97dd17b` — *feat(inventory): implement Phase 7 inventory management, warehousing, stock movements ledger & low-stock alerts*
 - `7ef613d` — *feat(payment): implement Phase 8 local mock payments, transactions ledger & refund workflows*
+- `ffa184b` — *feat(shipping): implement Phase 9 shipments, carrier tracking, milestone events & admin dispatch operations*
