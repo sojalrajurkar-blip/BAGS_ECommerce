@@ -8,7 +8,7 @@
 - Master Prompt: [`prompts/RORA_Antigravity_Backend_Implementation_Prompt.md`](file:///d:/ProjectFolder/RORA/prompts/RORA_Antigravity_Backend_Implementation_Prompt.md)
 - Software Requirements Specification: [`prompts/RORA_Backend_SRS.md`](file:///d:/ProjectFolder/RORA/prompts/RORA_Backend_SRS.md)
 
-**Backend Status:** Phases 0 through 7 Completed (88/88 tests passing). Ready for Phase 8.
+**Backend Status:** Phases 0 through 8 Completed (104/104 tests passing, 100% pass rate). Ready for Phase 9 (Shipping).
 
 ---
 
@@ -105,22 +105,40 @@
   - `GET /api/v1/admin/inventory/movements` — Global paginated movement audit ledger.
   - `GET /api/v1/admin/inventory/{idOrSku}/movements` — Per-item SKU movement audit trail.
 - Flyway migration `V7__seed_inventory_and_movements.sql` with full master inventory ledger and baseline restock logs.
-- Full test suite passing: **88/88 tests passing (100% pass rate)**.
+#### ✅ Phase 8: Local Mock Payments, Transactions Ledger & Refund Engine
+- `Payment` and `PaymentTransaction` JPA domain entities with comprehensive payment lifecycle management.
+- Complete payment states: `INITIATED`, `PENDING`, `SUCCESS`, `FAILED`, `CANCELLED`, `REFUNDED`.
+- Multi-rail payment simulation provider (`MockPaymentProvider`):
+  - Supported methods: `CARD`, `UPI`, `NETBANKING`, `WALLET`, `COD`.
+  - Realistic latency and idempotency handling via `idempotencyKey`.
+  - Deterministic testing simulations: `APPROVE`, `DECLINE_INSUFFICIENT_FUNDS`, `DECLINE_EXPIRED_CARD`, `TIMEOUT`, `FRAUD_ALERT`.
+- Automatic synchronization with `Order` and `OrderTimelineEvent` (payment status update, automatic timeline progression to `PAYMENT_VERIFIED` upon success).
+- Full refund engine: supports full and partial refunds with balance tracking, ledger audit logging, and automated order timeline status updates.
+- Public & Customer Payment APIs (`/api/v1/payments`):
+  - `POST /api/v1/payments/initiate` — Initiate checkout payment session with idempotency guarantee.
+  - `POST /api/v1/payments/process` — Process/execute simulated payment attempt.
+  - `GET /api/v1/payments/{paymentId}` — Retrieve payment and transaction ledger by payment ID.
+  - `GET /api/v1/payments/order/{orderIdOrNumber}` — Lookup payment record for a given order number/ID.
+- Admin Payment Management & Analytics APIs (`/api/v1/admin/payments`):
+  - `GET /api/v1/admin/payments/summary` — High-level payment financial KPIs (gross volume, successful transactions, pending count, refunded volume, success rate %).
+  - `GET /api/v1/admin/payments` — Paginated search and filtering by status, method, order ID, and date range.
+  - `POST /api/v1/admin/payments/{paymentId}/refund` — Admin refund execution with reason and transaction logging.
+- Flyway migration `V8__seed_payments.sql` seeding historical payment transactions for all luxury test orders.
+- Full test suite passing: **104/104 tests passing (100% pass rate)**.
 
 ---
 
-### 2. Canonical Roadmap (Phases 8 — 17)
+### 2. Canonical Roadmap (Phases 9 — 17)
 
-1. **Phase 8: Local Mock Payments** — `Payment` & `PaymentTransaction` entities, payment states (`INITIATED`, `PENDING`, `SUCCESS`, `FAILED`, `CANCELLED`, `REFUNDED`), mock UPI/Card/NetBanking simulator.
-2. **Phase 9: Shipping** — `Shipment` & `ShipmentEvent` entities, tracking references, carrier dispatching, shipment tracking lookup APIs.
-3. **Phase 10: Returns & Refunds** — Return requests workflow (`RETURN_REQUESTED` → `RETURN_APPROVED` → `RETURN_RECEIVED`), refund records linked to payments.
-4. **Phase 11: Reviews** — Product reviews, star ratings, verified purchase badges, review moderation & admin actions.
-5. **Phase 12: CMS & Settings** — Homepage banners, journal articles, FAQ items, store settings key-value store.
-6. **Phase 13: Admin Platform** — Consolidated admin dashboard, analytics KPIs, audit logs, granular permissions matrix.
-7. **Phase 14: Frontend Repository Migration** — Wire Next.js repository layer to Spring Boot backend APIs, preserve all animations/UI.
-8. **Phase 15: Full Local QA** — End-to-end customer and admin test matrix, failure scenarios, concurrency checks.
-9. **Phase 16: Production Preparation** — Docker containerization, CI/CD pipelines, cloud PostgreSQL plan, secrets management.
-10. **Phase 17: Production Deployment** — Deployment execution and live smoke test verification.
+1. **Phase 9: Shipping** — `Shipment` & `ShipmentEvent` entities, tracking references, carrier dispatching, shipment tracking lookup APIs.
+2. **Phase 10: Returns & Refunds** — Return requests workflow (`RETURN_REQUESTED` → `RETURN_APPROVED` → `RETURN_RECEIVED`), refund records linked to payments.
+3. **Phase 11: Reviews** — Product reviews, star ratings, verified purchase badges, review moderation & admin actions.
+4. **Phase 12: CMS & Settings** — Homepage banners, journal articles, FAQ items, store settings key-value store.
+5. **Phase 13: Admin Platform** — Consolidated admin dashboard, analytics KPIs, audit logs, granular permissions matrix.
+6. **Phase 14: Frontend Repository Migration** — Wire Next.js repository layer to Spring Boot backend APIs, preserve all animations/UI.
+7. **Phase 15: Full Local QA** — End-to-end customer and admin test matrix, failure scenarios, concurrency checks.
+8. **Phase 16: Production Preparation** — Docker containerization, CI/CD pipelines, cloud PostgreSQL plan, secrets management.
+9. **Phase 17: Production Deployment** — Deployment execution and live smoke test verification.
 
 ---
 
