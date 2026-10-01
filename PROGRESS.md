@@ -1,129 +1,121 @@
 # RÓRA — Luxury Bags & Carry Essentials
 ## Project Implementation Progress & Architecture State
 
-**Last Updated:** September 30, 2026  
-**Architecture:** Next.js 16 (App Router) + React 19 + TypeScript (Strict) + GSAP / Lenis Motion Engine  
-**Status:** 100% Fully Cleaned, Migrated to TypeScript, Build & Lint Verified (0 Errors, 0 Warnings)
+**Last Updated:** October 1, 2026  
+**Architecture:** Next.js 16 (App Router) Frontend + Spring Boot 3.4+ (Java 21 LTS) + PostgreSQL 18.4 + Maven + Docker  
+**Git Repository:** `https://github.com/sojalrajurkar-blip/BAGS_ECommerce.git` (Branch: `main`)  
+**Backend Status:** 6 Phases 100% Completed, Tested (65/65 tests passing), and Pushed. Ready for Phase 7.
 
 ---
 
-### 1. Key Accomplishments in this Session
+### 1. Backend Implementation Progress by Phase
 
-#### ✅ Phase 1: Context & TypeScript Cleanup
-- **Duplicate Context Removed:** Removed legacy `StoreContext.jsx` after ensuring all imports throughout the app utilize strongly typed `StoreContext.tsx`.
-- **Domain State:** `StoreContext.tsx` now manages `CartItem`, `WishlistItem`, `Order`, `Coupon`, and `StoreSettings` with strict TypeScript contracts.
+#### ✅ Phase 0: Audit & Architecture Foundation
+- Audited Next.js 16 frontend contracts (`StoreContext`, `repositories`, `domain.ts`).
+- Created Spring Boot Maven project structure, `pom.xml` with Spring Boot 3.4.3, Java 21 LTS, Spring Security, Spring Data JPA, Flyway, PostgreSQL driver, and JWT support (`jjwt-api`).
+- Configured dev & test application profiles (`application-dev.yml`, `application-test.yml`).
 
-#### ✅ Phase 2: 100% TypeScript Migration (`src/`)
-- **Zero `.js` / `.jsx` in `src/`:** All components, views, repositories, context, animations, and App Router pages have been migrated to `.ts` / `.tsx`.
-- **Repository Architecture:** All 7 repositories in `src/data/repositories/` have typed async interfaces:
-  - `productRepository.ts`
-  - `categoryRepository.ts`
-  - `orderRepository.ts`
-  - `couponRepository.ts`
-  - `contentRepository.ts`
-  - `reviewRepository.ts`
-  - `adminRepository.ts`
-  - `index.ts` (Export barrel)
-- **Domain Models (`src/types/domain.ts` & `src/types/index.ts`):** Complete types for `Product`, `Category`, `Order`, `OrderItem`, `Review`, `AuditLog`, `PaymentRecord`, `ShipmentRecord`, `ReturnRecord`, `RefundRecord`, `AdminRole`, `AdminUser`, `StoreSettings`, `CMSContent`, etc.
+#### ✅ Phase 1: Database Architecture & Core System
+- Configured PostgreSQL 18.4 connection with HikariCP connection pooling (`RoraHikariCP`).
+- Defined complete Base Entity hierarchy (`BaseEntity` with UUID keys, `createdAt`, `updatedAt`).
+- Implemented global `ApiResponse<T>`, unified error handling (`GlobalExceptionHandler`), and custom exceptions (`ResourceNotFoundException`, `BadRequestException`, `UnauthorizedException`).
+- Integrated Springdoc OpenAPI 3 / Swagger (`/swagger-ui.html` and `/v3/api-docs`).
+- Created Flyway migration `V1__initial_schema.sql` defining 16 normalized tables:
+  - `users`, `roles`, `permissions`, `user_roles`, `role_permissions`
+  - `categories`, `products`, `product_variants`, `product_images`
+  - `coupons`, `coupon_usages`, `cart_items`
+  - `orders`, `order_items`, `order_timeline_events`
+  - `customers`, `addresses`, `reviews`, `audit_logs`, `store_settings`, `cms_content`
 
-#### ✅ Phase 3: Views & Admin Portal Migration
-- **19 Storefront Views Migrated to `.tsx`:** `HomePage`, `ShopPage`, `ProductDetailPage`, `CategoryPage`, `SearchResultsPage`, `CartPage`, `CheckoutPage`, `OrderConfirmationPage`, `OrderTrackingPage`, `AccountPage`, `OrdersPage`, `WishlistPage`, `AboutPage`, `JournalPage`, `FAQPage`, `ContactPage`, `ReturnsPage`, `ShippingPage`, `NotFoundPage`.
-- **17 Admin Portal Sub-Modules Migrated to `.tsx`:** `AdminDashboard`, `AdminProducts`, `AdminCategories`, `AdminInventory`, `AdminOrders`, `AdminCustomers`, `AdminPayments`, `AdminShipments`, `AdminReturns`, `AdminRefunds`, `AdminCoupons`, `AdminReviews`, `AdminCMS`, `AdminUsers`, `AdminRoles`, `AdminSettings`, `AdminAuditLogs`, `AdminPage`.
-- **Admin & Common Components:** `AdminHeader`, `AdminSidebar`, `AdminStat`, `AdminStatusBadge`, `AdminModal`, `Header`, `Footer`, `ProductCard`, `CartDrawer`, `SearchModal`, `Breadcrumbs`, `ToastContainer`.
+#### ✅ Phase 2: Authentication, JWT & 5-Role RBAC Security
+- Implemented stateless JWT engine (`JwtTokenProvider`, `JwtAuthenticationFilter`, `JwtAuthenticationEntryPoint`).
+- Seeded canonical roles (`ROLE_CUSTOMER`, `ROLE_ADMIN`, `ROLE_MANAGER`, `ROLE_PRODUCT_MANAGER`, `ROLE_ORDER_MANAGER`) and granular permissions via `V2__seed_roles_and_admin.sql`.
+- Built authentication endpoints:
+  - `POST /api/v1/auth/register` — Customer self-registration with password hashing (BCrypt 12).
+  - `POST /api/v1/auth/login` — Email/password login with JWT token issuance.
+  - `POST /api/v1/auth/refresh` — Token refresh rotation.
+  - `GET /api/v1/auth/me` — Current authenticated user profile with roles & permissions.
 
-#### ✅ Phase 4: TypeScript Strict Configuration
-- In `tsconfig.json`:
-  - `"strict": true`
-  - `"allowJs": false`
-  - `"strictNullChecks": true`
-- Validated via `npx tsc --noEmit` — **0 errors**.
+#### ✅ Phase 3: Catalog Domain (Categories, Products, Search & Admin CRUD)
+- Entities & Repositories: `Category`, `Product`, `ProductVariant`, `ProductImage`.
+- Multi-criteria search and filter engine (`ProductSpecification`):
+  - Filter by category slug, search query, price ranges (min/max), stock availability, badges (`Best Seller`, `New Arrival`, `Curated`, `Featured`).
+  - Sort by `featured`, `price-low-to-high`, `price-high-to-low`, `newest`, `rating`.
+- Public & Admin Catalog APIs:
+  - `GET /api/v1/categories`, `GET /api/v1/categories/{slug}`
+  - `GET /api/v1/products`, `GET /api/v1/products/{idOrSlug}`, `GET /api/v1/products/featured`, `GET /api/v1/products/new-arrivals`
+  - `POST /api/v1/admin/products`, `PUT /api/v1/admin/products/{id}`, `DELETE /api/v1/admin/products/{id}`, `PATCH /api/v1/admin/products/{id}/stock`
+- Seeded comprehensive luxury catalog via `V3__seed_categories_and_products.sql` with real pricing and high-res assets.
 
-#### ✅ Phase 5: Style Architecture Cleanup
-- Static inline styles audited and extracted to `components.css`, `pages.css`, and `admin.css`.
-- Preserved only legitimate dynamic styles (e.g. swatch background color hex codes).
+#### ✅ Phase 4: Shopping Experience (Persistent Cart, Wishlist & Coupons)
+- **Cart Engine:** Supports authenticated users and anonymous guest sessions (`X-Session-ID` / cookie headers) with seamless login merge.
+  - `GET /api/v1/cart`, `POST /api/v1/cart/items`, `PUT /api/v1/cart/items/{id}`, `DELETE /api/v1/cart/items/{id}`, `DELETE /api/v1/cart`
+- **Wishlist Engine:** Customer-authenticated wishlist toggle and retrieval.
+  - `GET /api/v1/wishlist`, `POST /api/v1/wishlist/{productId}`, `DELETE /api/v1/wishlist/{productId}`
+- **Coupons Engine:** Multi-rule validation (percentage/fixed discounts, minimum spend, expiry, usage limits, per-user limits).
+  - `POST /api/v1/cart/apply-coupon`, `POST /api/v1/coupons/validate`, `GET /api/v1/coupons/active`, Admin CRUD endpoints.
+  - Seeded `RORA10`, `WELCOME15`, `BESPOKE500` via `V4__seed_coupons.sql`.
 
-#### ✅ Phase 6: ESLint Setup & Verification
-- Configured ESLint 9+ flat configuration in `eslint.config.mjs` with `typescript-eslint`.
-- `npm run lint` (`eslint src/`) executed and passing with **0 errors, 0 warnings**.
+#### ✅ Phase 5: Checkout, Orders & Fulfilment Engine
+- Complete checkout pipeline supporting both direct "Buy Now" requests and cart-based checkout.
+- Automated inventory deduction and coupon usage recording.
+- Dynamic shipping calculation: free shipping for orders >= ₹1,999; ₹199 standard fee otherwise.
+- 5-step interactive fulfillment timeline (`Order Placed` -> `Payment Verified` -> `Dispatched from Hub` -> `Out for Delivery` -> `Delivered`).
+- Public tracking: `GET /api/v1/orders/track/{orderNumber}` (supports `#RRA...` or raw digits).
+- Customer & Admin Order APIs:
+  - `POST /api/v1/checkout/place-order`
+  - `GET /api/v1/orders/my-orders`, `GET /api/v1/orders/{idOrNumber}`, `PUT /api/v1/orders/{idOrNumber}/cancel`
+  - `GET /api/v1/admin/orders`, `PUT /api/v1/admin/orders/{id}/status`, `PUT /api/v1/admin/orders/{id}/tracking`
+- Seeded historical luxury orders (`#RRA89241`, `#RRA89105`, `#RRA88940`) via `V5__seed_orders.sql`.
 
-#### ✅ Phase 7: Production Build & Route Verification
-- `npm run build` executed successfully via Next.js Turbopack:
-  - 18 static & dynamic App Router routes compiled cleanly in 3.6s.
-- Tested production server (`next start`) with HTTP validation across 14 major routes:
-  - `/` (Home) -> **HTTP 200**
-  - `/shop` -> **HTTP 200**
-  - `/product/prod-1` -> **HTTP 200**
-  - `/cart` -> **HTTP 200**
-  - `/checkout` -> **HTTP 200**
-  - `/admin` -> **HTTP 200**
-  - `/wishlist` -> **HTTP 200**
-  - `/about` -> **HTTP 200**
-  - `/faq` -> **HTTP 200**
-  - `/journal` -> **HTTP 200**
-  - `/contact` -> **HTTP 200**
-  - `/returns` -> **HTTP 200**
-  - `/shipping` -> **HTTP 200**
-  - `/category/tote-bags` -> **HTTP 200**
+#### ✅ Phase 6: Customer Accounts, Addresses, Profiles & Admin Customer 360
+- `Customer` and `CustomerAddress` JPA domain entities with multi-address management.
+- Customer Account Endpoints:
+  - `GET /api/v1/account/profile` — Authenticated profile with order history metrics and tier info.
+  - `PUT /api/v1/account/profile` — Update personal profile, name, phone.
+  - `PUT /api/v1/account/password` — Secure password change with BCrypt verification.
+  - `GET /api/v1/account/addresses` — List saved shipping & billing addresses.
+  - `POST /api/v1/account/addresses` — Save new address with automatic default handling.
+  - `PUT /api/v1/account/addresses/{id}` — Update address.
+  - `DELETE /api/v1/account/addresses/{id}` — Delete address with auto-fallback for default.
+  - `PUT /api/v1/account/addresses/{id}/default` — Set primary address.
+- Admin Customer 360:
+  - `GET /api/v1/admin/customers` — Paginated search by name, email, phone, and VIP tier.
+  - `GET /api/v1/admin/customers/{id}` — Full 360 customer profile with lifetime value, orders, and addresses.
+  - `PUT /api/v1/admin/customers/{id}/tier` — Upgrade/assign customer VIP tiers.
+- Seeded client profiles and addresses across major cities via `V6__seed_customers.sql`.
+- Full test suite passing: **65/65 tests passing (100% pass rate)**.
 
 ---
 
-### 2. Next Session Plan & Roadmap
+### 2. Next Session Plan: Phase 7 & Beyond
 
-1. **State Persistence & Mock Data Sync:** Review local storage hydration patterns for cart/wishlist/checkout across server rendering.
-2. **Additional Route Enhancements:** Review dynamic route metadata and OpenGraph tag generation.
-3. **Admin Feature Extensions:** Connect additional mock actions or CSV export/import utilities if requested.
-4. **End-to-End Visual QA:** Perform full user-guided visual audits of checkout, filters, and admin interactions.
+1. **Phase 7: Inventory Management, Warehousing & Stock Movements Engine**
+   - Stock movement ledger (`InventoryMovement` entity: `RESTOCK`, `SALE`, `RETURN`, `ADJUSTMENT`, `DAMAGE`).
+   - Low-stock threshold alerts (< 5 units) and out-of-stock management.
+   - Admin Inventory controller (`/api/v1/admin/inventory`) with batch stock updates and movement logs.
+2. **Phase 8: Store Operations & Fulfillment Subsystems**
+   - Payments ledger (`PaymentRecord` with mock UPI/Card/NetBanking simulator).
+   - Shipments tracking (`ShipmentRecord` with carrier dispatching).
+   - Returns & Refunds workflow (`ReturnRecord`, `RefundRecord` with inspection lifecycle).
+3. **Phase 9: Reviews, Ratings & Social Proof Engine**
+   - Product reviews with verified buyer badges and moderation workflow.
+4. **Phase 10: Editorial CMS, Journal & Store Settings**
+   - CMS content management (journal articles, FAQ, hero banners).
+   - Store settings key-value store (tax rates, free shipping thresholds, contact metadata).
+5. **Phase 11: Tamper-Evident Security Audit Logging & Admin User RBAC Management**
+   - Structured audit log recording admin mutations with actor ID, IP address, and payload diffs.
+6. **Phase 12: Next.js Frontend Integration & End-to-End Verification**
+   - Wire Next.js repository layer to Spring Boot backend API.
+   - Verify SSR/CSR hydration, checkout flow, and admin console against live PostgreSQL database.
 
 ---
 
-### 3. Repository File Structure
+### 3. Git Commit History Summary
 
-```text
-d:/ProjectFolder/RORA/
-├── src/
-│   ├── animations/
-│   │   ├── gsapConfig.ts          # GSAP & ScrollTrigger configuration
-│   │   ├── LenisProvider.tsx      # Smooth scroll context provider
-│   │   ├── motionTokens.ts        # RÓRA design motion tokens
-│   │   ├── reducedMotion.ts       # prefers-reduced-motion hook & utility
-│   │   ├── reveals.ts             # Reusable editorial reveal primitives
-│   │   ├── useGsapContext.ts      # Scoped animation lifecycle hook
-│   │   └── index.ts               # Central animations export barrel
-│   ├── app/                       # Next.js 16 App Router Routes
-│   │   ├── layout.tsx             # Root layout with fonts, metadata, providers
-│   │   ├── page.tsx               # Home route
-│   │   ├── shop/page.tsx          # Catalog
-│   │   ├── product/[slug]/page.tsx# PDP dynamic route
-│   │   ├── category/[slug]/page.tsx# Category dynamic route
-│   │   ├── cart/page.tsx          # Shopping bag
-│   │   ├── checkout/page.tsx      # Multi-step checkout
-│   │   ├── confirmation/page.tsx  # Order confirmation
-│   │   ├── admin/page.tsx         # Executive admin console
-│   │   ├── ...                    # other app routes
-│   │   └── not-found.tsx          # 404 page
-│   ├── components/
-│   │   ├── admin/                 # AdminLayout, Header, Sidebar, Stat, Modal, StatusBadge
-│   │   └── common/                # Header, Footer, ProductCard, CartDrawer, SearchModal, Breadcrumbs, ToastContainer
-│   ├── context/
-│   │   └── StoreContext.tsx       # Cart, Wishlist, Navigation, Toast, Settings state
-│   ├── data/
-│   │   ├── imageAssets.ts         # High-resolution luxury image assets
-│   │   ├── mockData.ts            # Typed catalog and admin dataset
-│   │   └── repositories/          # Strongly typed async repository layer
-│   ├── types/
-│   │   ├── domain.ts              # Complete domain models
-│   │   └── index.ts               # Types barrel
-│   ├── views/                     # Presentational view components
-│   │   ├── admin/                 # 17 admin sub-module views
-│   │   └── ...                    # 19 storefront views
-│   └── styles/
-│       ├── admin.css              # Admin console stylesheet
-│       ├── components.css         # Common components stylesheet
-│       ├── pages.css              # Public storefront stylesheet
-│       └── globals.css            # Design tokens, fonts, resets, utility classes
-├── eslint.config.mjs              # ESLint 9+ flat configuration
-├── next.config.mjs                # Next.js 16 config
-├── package.json                   # Dependencies & scripts (dev, build, start, lint)
-├── PROGRESS.md                    # Project tracking document
-└── tsconfig.json                  # strict: true, allowJs: false
-```
+- `8be8df0` — *feat(backend): implement Phase 0 & Phase 1 backend foundation, database schema, entity models, and OpenAPI docs*
+- `068b09e` — *feat(auth): implement Phase 2 JWT authentication, 5-role RBAC, and security endpoints*
+- `29dadaf` — *feat(catalog): implement Phase 3 catalog domain, products, categories, variants, and admin CRUD*
+- `b8a9582` — *feat(shopping): implement Phase 4 shopping cart, wishlist, and coupon engine*
+- `fcd00d6` — *feat(order): implement Phase 5 checkout, orders, 5-step timeline tracking & admin fulfillment*
+- `15a2c07` — *feat(customer): implement Phase 6 customer accounts, saved addresses, profile management & Admin Customer 360*
