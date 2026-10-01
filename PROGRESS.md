@@ -4,7 +4,11 @@
 **Last Updated:** October 1, 2026  
 **Architecture:** Next.js 16 (App Router) Frontend + Spring Boot 3.4+ (Java 21 LTS) + PostgreSQL 18.4 + Maven + Docker  
 **Git Repository:** `https://github.com/sojalrajurkar-blip/BAGS_ECommerce.git` (Branch: `main`)  
-**Backend Status:** 7 Phases 100% Completed, Tested (88/88 tests passing), and Verified. Ready for Phase 8.
+**Authoritative Master Specifications:**
+- Master Prompt: [`prompts/RORA_Antigravity_Backend_Implementation_Prompt.md`](file:///d:/ProjectFolder/RORA/prompts/RORA_Antigravity_Backend_Implementation_Prompt.md)
+- Software Requirements Specification: [`prompts/RORA_Backend_SRS.md`](file:///d:/ProjectFolder/RORA/prompts/RORA_Backend_SRS.md)
+
+**Backend Status:** Phases 0 through 7 Completed (88/88 tests passing). Ready for Phase 8.
 
 ---
 
@@ -105,22 +109,18 @@
 
 ---
 
-### 2. Next Session Plan: Phase 8 & Beyond
+### 2. Canonical Roadmap (Phases 8 — 17)
 
-1. **Phase 8: Store Operations & Fulfillment Subsystems**
-   - Payments ledger (`PaymentRecord` with mock UPI/Card/NetBanking simulator).
-   - Shipments tracking (`ShipmentRecord` with carrier dispatching).
-   - Returns & Refunds workflow (`ReturnRecord`, `RefundRecord` with inspection lifecycle).
-2. **Phase 9: Reviews, Ratings & Social Proof Engine**
-   - Product reviews with verified buyer badges and moderation workflow.
-3. **Phase 10: Editorial CMS, Journal & Store Settings**
-   - CMS content management (journal articles, FAQ, hero banners).
-   - Store settings key-value store (tax rates, free shipping thresholds, contact metadata).
-4. **Phase 11: Tamper-Evident Security Audit Logging & Admin User RBAC Management**
-   - Structured audit log recording admin mutations with actor ID, IP address, and payload diffs.
-5. **Phase 12: Next.js Frontend Integration & End-to-End Verification**
-   - Wire Next.js repository layer to Spring Boot backend API.
-   - Verify SSR/CSR hydration, checkout flow, and admin console against live PostgreSQL database.
+1. **Phase 8: Local Mock Payments** — `Payment` & `PaymentTransaction` entities, payment states (`INITIATED`, `PENDING`, `SUCCESS`, `FAILED`, `CANCELLED`, `REFUNDED`), mock UPI/Card/NetBanking simulator.
+2. **Phase 9: Shipping** — `Shipment` & `ShipmentEvent` entities, tracking references, carrier dispatching, shipment tracking lookup APIs.
+3. **Phase 10: Returns & Refunds** — Return requests workflow (`RETURN_REQUESTED` → `RETURN_APPROVED` → `RETURN_RECEIVED`), refund records linked to payments.
+4. **Phase 11: Reviews** — Product reviews, star ratings, verified purchase badges, review moderation & admin actions.
+5. **Phase 12: CMS & Settings** — Homepage banners, journal articles, FAQ items, store settings key-value store.
+6. **Phase 13: Admin Platform** — Consolidated admin dashboard, analytics KPIs, audit logs, granular permissions matrix.
+7. **Phase 14: Frontend Repository Migration** — Wire Next.js repository layer to Spring Boot backend APIs, preserve all animations/UI.
+8. **Phase 15: Full Local QA** — End-to-end customer and admin test matrix, failure scenarios, concurrency checks.
+9. **Phase 16: Production Preparation** — Docker containerization, CI/CD pipelines, cloud PostgreSQL plan, secrets management.
+10. **Phase 17: Production Deployment** — Deployment execution and live smoke test verification.
 
 ---
 
