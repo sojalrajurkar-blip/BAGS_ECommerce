@@ -70,13 +70,15 @@ public class SecurityConfig {
                         // Public Swagger & OpenAPI Docs
                         .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**", "/swagger-resources/**", "/webjars/**").permitAll()
 
-                        // Public Catalog & Content Read Endpoints
+                        // Public Catalog, Orders & Content Read Endpoints
                         .requestMatchers(HttpMethod.GET, "/api/v1/products/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/categories/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/coupons/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/cms/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/settings/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/reviews/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/orders/track/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/orders/*").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/shipments/track/**").permitAll()
 
                         // Cart & Checkout (Supports session & guest actions)
