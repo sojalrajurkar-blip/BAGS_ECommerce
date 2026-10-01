@@ -79,7 +79,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/v1/reviews/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/orders/track/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/orders/*").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/v1/shipments/track/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/shipments/**").permitAll()
 
                         // Cart, Checkout & Payments (Supports session & guest actions)
                         .requestMatchers("/api/v1/cart/**").permitAll()

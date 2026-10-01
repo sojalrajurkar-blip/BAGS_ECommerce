@@ -8,7 +8,7 @@
 - Master Prompt: [`prompts/RORA_Antigravity_Backend_Implementation_Prompt.md`](file:///d:/ProjectFolder/RORA/prompts/RORA_Antigravity_Backend_Implementation_Prompt.md)
 - Software Requirements Specification: [`prompts/RORA_Backend_SRS.md`](file:///d:/ProjectFolder/RORA/prompts/RORA_Backend_SRS.md)
 
-**Backend Status:** Phases 0 through 8 Completed (104/104 tests passing, 100% pass rate). Ready for Phase 9 (Shipping).
+**Backend Status:** Phases 0 through 9 Completed (119/119 tests passing, 100% pass rate). Ready for Phase 10 (Returns & Refunds).
 
 ---
 
@@ -124,21 +124,37 @@
   - `GET /api/v1/admin/payments` — Paginated search and filtering by status, method, order ID, and date range.
   - `POST /api/v1/admin/payments/{paymentId}/refund` — Admin refund execution with reason and transaction logging.
 - Flyway migration `V8__seed_payments.sql` seeding historical payment transactions for all luxury test orders.
-- Full test suite passing: **104/104 tests passing (100% pass rate)**.
+#### ✅ Phase 9: Shipping, Consignments, Carrier Tracking & Milestone Events Engine
+- `Shipment` and `ShipmentEvent` JPA domain entities with complete delivery lifecycle tracking.
+- Full consignment statuses: `CREATED`, `MANIFESTED`, `PICKED_UP`, `IN_TRANSIT`, `OUT_FOR_DELIVERY`, `DELIVERED`, `FAILED_DELIVERY`, `RETURNED_TO_ORIGIN`, `CANCELLED`.
+- Dual tracking lookup engine: supports live lookup by AWB tracking number or Order number (`#RRA...` or raw digits) with automatic fallback synthesis from order timeline.
+- Deep bidirectional synchronization with `Order` and `OrderTimelineEvent` (automatically updates order carrier, tracking number, estimated delivery, status, and appends timestamped fulfillment events).
+- Public & Customer Shipping APIs (`/api/v1/shipments`):
+  - `GET /api/v1/shipments/track/{trackingCodeOrOrderNumber}` — Real-time live tracking with milestone events and package contents.
+  - `GET /api/v1/shipments/order/{orderIdOrNumber}` — List all shipments associated with an order.
+  - `GET /api/v1/shipments/{id}` — Get single shipment consignment details.
+  - `GET /api/v1/shipments/awb/{awbNumber}` — Lookup shipment by AWB code.
+- Admin Consignments & Carrier Operations APIs (`/api/v1/admin/shipments`):
+  - `GET /api/v1/admin/shipments/summary` — Shipping KPI metrics (total shipments, pending dispatch, in-transit, out for delivery, delivered, delivery exceptions).
+  - `GET /api/v1/admin/shipments` — Paginated search by AWB, order #, customer, courier partner, destination, and status filter.
+  - `POST /api/v1/admin/shipments` — Create and dispatch new consignment for an order.
+  - `POST /api/v1/admin/shipments/{id}/events` — Record new tracking milestone event (auto-updates delivery status and order timeline).
+  - `PUT /api/v1/admin/shipments/{id}/status` — Quick status transition.
+- Flyway migration `V9__seed_shipments.sql` seeding historical consignments and realistic milestone scan events.
+- Full test suite passing: **119/119 tests passing (100% pass rate)**.
 
 ---
 
-### 2. Canonical Roadmap (Phases 9 — 17)
+### 2. Canonical Roadmap (Phases 10 — 17)
 
-1. **Phase 9: Shipping** — `Shipment` & `ShipmentEvent` entities, tracking references, carrier dispatching, shipment tracking lookup APIs.
-2. **Phase 10: Returns & Refunds** — Return requests workflow (`RETURN_REQUESTED` → `RETURN_APPROVED` → `RETURN_RECEIVED`), refund records linked to payments.
-3. **Phase 11: Reviews** — Product reviews, star ratings, verified purchase badges, review moderation & admin actions.
-4. **Phase 12: CMS & Settings** — Homepage banners, journal articles, FAQ items, store settings key-value store.
-5. **Phase 13: Admin Platform** — Consolidated admin dashboard, analytics KPIs, audit logs, granular permissions matrix.
-6. **Phase 14: Frontend Repository Migration** — Wire Next.js repository layer to Spring Boot backend APIs, preserve all animations/UI.
-7. **Phase 15: Full Local QA** — End-to-end customer and admin test matrix, failure scenarios, concurrency checks.
-8. **Phase 16: Production Preparation** — Docker containerization, CI/CD pipelines, cloud PostgreSQL plan, secrets management.
-9. **Phase 17: Production Deployment** — Deployment execution and live smoke test verification.
+1. **Phase 10: Returns & Refunds** — Return requests workflow (`RETURN_REQUESTED` → `RETURN_APPROVED` → `RETURN_RECEIVED`), refund records linked to payments.
+2. **Phase 11: Reviews** — Product reviews, star ratings, verified purchase badges, review moderation & admin actions.
+3. **Phase 12: CMS & Settings** — Homepage banners, journal articles, FAQ items, store settings key-value store.
+4. **Phase 13: Admin Platform** — Consolidated admin dashboard, analytics KPIs, audit logs, granular permissions matrix.
+5. **Phase 14: Frontend Repository Migration** — Wire Next.js repository layer to Spring Boot backend APIs, preserve all animations/UI.
+6. **Phase 15: Full Local QA** — End-to-end customer and admin test matrix, failure scenarios, concurrency checks.
+7. **Phase 16: Production Preparation** — Docker containerization, CI/CD pipelines, cloud PostgreSQL plan, secrets management.
+8. **Phase 17: Production Deployment** — Deployment execution and live smoke test verification.
 
 ---
 
