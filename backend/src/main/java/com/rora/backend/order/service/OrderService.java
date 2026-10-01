@@ -6,6 +6,7 @@ import com.rora.backend.catalog.repository.ProductRepository;
 import com.rora.backend.catalog.repository.ProductVariantRepository;
 import com.rora.backend.common.exception.BadRequestException;
 import com.rora.backend.common.exception.ResourceNotFoundException;
+import com.rora.backend.inventory.service.InventoryService;
 import com.rora.backend.order.dto.*;
 import com.rora.backend.order.entity.Order;
 import com.rora.backend.order.entity.OrderItem;
@@ -55,6 +56,7 @@ public class OrderService {
     private final ProductVariantRepository productVariantRepository;
     private final UserRepository userRepository;
     private final CouponService couponService;
+    private final InventoryService inventoryService;
 
     @Transactional
     public OrderDto placeOrder(String userId, CheckoutRequest request) {
@@ -273,6 +275,23 @@ public class OrderService {
         log.info("Successfully created order: {} with {} items, total: {}",
                 savedOrder.getOrderNumber(), savedOrder.getItems().size(), savedOrder.getTotal());
 
+        // Record inventory sales movement ledger
+        for (OrderItem item : savedOrder.getItems()) {
+            try {
+                String sku = null;
+                if (item.getVariant() != null && item.getVariant().getSku() != null) {
+                    sku = item.getVariant().getSku();
+                } else if (item.getProduct() != null && item.getProduct().getSku() != null) {
+                    sku = item.getProduct().getSku();
+                }
+                if (sku != null) {
+                    inventoryService.processSale(sku, item.getQuantity(), savedOrder.getOrderNumber(), savedOrder.getCustomerEmail());
+                }
+            } catch (Exception e) {
+                log.error("Failed to record inventory sale ledger for item in order {}: {}", savedOrder.getOrderNumber(), e.getMessage());
+            }
+        }
+
         // Record coupon usage
         if (order.getCouponCode() != null && discountAmount.compareTo(BigDecimal.ZERO) > 0) {
             try {
@@ -457,11 +476,25 @@ public class OrderService {
                 ProductVariant variant = item.getVariant();
                 variant.setStock(variant.getStock() + item.getQuantity());
                 productVariantRepository.save(variant);
+                if (variant.getSku() != null) {
+                    try {
+                        inventoryService.processOrderCancellation(variant.getSku(), item.getQuantity(), order.getOrderNumber(), "system");
+                    } catch (Exception e) {
+                        log.error("Failed to record restoral movement for variant {}: {}", variant.getSku(), e.getMessage());
+                    }
+                }
             }
             if (item.getProduct() != null) {
                 Product product = item.getProduct();
                 product.setStock(product.getStock() + item.getQuantity());
                 productRepository.save(product);
+                if (item.getVariant() == null && product.getSku() != null) {
+                    try {
+                        inventoryService.processOrderCancellation(product.getSku(), item.getQuantity(), order.getOrderNumber(), "system");
+                    } catch (Exception e) {
+                        log.error("Failed to record restoral movement for product {}: {}", product.getSku(), e.getMessage());
+                    }
+                }
             }
         }
     }

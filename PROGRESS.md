@@ -4,7 +4,7 @@
 **Last Updated:** October 1, 2026  
 **Architecture:** Next.js 16 (App Router) Frontend + Spring Boot 3.4+ (Java 21 LTS) + PostgreSQL 18.4 + Maven + Docker  
 **Git Repository:** `https://github.com/sojalrajurkar-blip/BAGS_ECommerce.git` (Branch: `main`)  
-**Backend Status:** 6 Phases 100% Completed, Tested (65/65 tests passing), and Pushed. Ready for Phase 7.
+**Backend Status:** 7 Phases 100% Completed, Tested (88/88 tests passing), and Verified. Ready for Phase 8.
 
 ---
 
@@ -84,28 +84,41 @@
   - `GET /api/v1/admin/customers/{id}` — Full 360 customer profile with lifetime value, orders, and addresses.
   - `PUT /api/v1/admin/customers/{id}/tier` — Upgrade/assign customer VIP tiers.
 - Seeded client profiles and addresses across major cities via `V6__seed_customers.sql`.
-- Full test suite passing: **65/65 tests passing (100% pass rate)**.
+
+#### ✅ Phase 7: Inventory Management, Warehousing & Stock Movements Engine
+- `Inventory` and `InventoryMovement` JPA domain entities with multi-facility warehousing support (`warehouseLocation`, `binLocation`).
+- Audit-proof stock movement ledger recording `RESTOCK`, `SALE`, `RETURN`, `ADJUSTMENT`, `DAMAGE`, `RESERVATION`, and `RELEASE_RESERVATION`.
+- Dynamic low-stock threshold alert system and real-time synchronization with `Product` and `ProductVariant` catalog stock.
+- Integration with `OrderService` for automatic sale movement recording on checkout and restoral movements on order cancellation.
+- Admin Warehousing & Stock Management APIs (`/api/v1/admin/inventory`):
+  - `GET /api/v1/admin/inventory/summary` — Key KPI health metrics (total SKUs, available units, reserved units, low-stock count, out-of-stock count, recent movements).
+  - `GET /api/v1/admin/inventory` — Paginated inventory search by keyword, status (`IN_STOCK`, `LOW_STOCK`, `OUT_OF_STOCK`), and category.
+  - `GET /api/v1/admin/inventory/low-stock` — Real-time stream of low-stock alerts.
+  - `GET /api/v1/admin/inventory/{idOrSku}` — Single inventory item details.
+  - `POST /api/v1/admin/inventory/adjust` — Atomic stock adjustment with automated movement ledger logging.
+  - `POST /api/v1/admin/inventory/batch-adjust` — Transactional multi-SKU batch adjustments.
+  - `PUT /api/v1/admin/inventory/{idOrSku}/threshold` — Update low stock alerts threshold and warehouse bin locations.
+  - `GET /api/v1/admin/inventory/movements` — Global paginated movement audit ledger.
+  - `GET /api/v1/admin/inventory/{idOrSku}/movements` — Per-item SKU movement audit trail.
+- Flyway migration `V7__seed_inventory_and_movements.sql` with full master inventory ledger and baseline restock logs.
+- Full test suite passing: **88/88 tests passing (100% pass rate)**.
 
 ---
 
-### 2. Next Session Plan: Phase 7 & Beyond
+### 2. Next Session Plan: Phase 8 & Beyond
 
-1. **Phase 7: Inventory Management, Warehousing & Stock Movements Engine**
-   - Stock movement ledger (`InventoryMovement` entity: `RESTOCK`, `SALE`, `RETURN`, `ADJUSTMENT`, `DAMAGE`).
-   - Low-stock threshold alerts (< 5 units) and out-of-stock management.
-   - Admin Inventory controller (`/api/v1/admin/inventory`) with batch stock updates and movement logs.
-2. **Phase 8: Store Operations & Fulfillment Subsystems**
+1. **Phase 8: Store Operations & Fulfillment Subsystems**
    - Payments ledger (`PaymentRecord` with mock UPI/Card/NetBanking simulator).
    - Shipments tracking (`ShipmentRecord` with carrier dispatching).
    - Returns & Refunds workflow (`ReturnRecord`, `RefundRecord` with inspection lifecycle).
-3. **Phase 9: Reviews, Ratings & Social Proof Engine**
+2. **Phase 9: Reviews, Ratings & Social Proof Engine**
    - Product reviews with verified buyer badges and moderation workflow.
-4. **Phase 10: Editorial CMS, Journal & Store Settings**
+3. **Phase 10: Editorial CMS, Journal & Store Settings**
    - CMS content management (journal articles, FAQ, hero banners).
    - Store settings key-value store (tax rates, free shipping thresholds, contact metadata).
-5. **Phase 11: Tamper-Evident Security Audit Logging & Admin User RBAC Management**
+4. **Phase 11: Tamper-Evident Security Audit Logging & Admin User RBAC Management**
    - Structured audit log recording admin mutations with actor ID, IP address, and payload diffs.
-6. **Phase 12: Next.js Frontend Integration & End-to-End Verification**
+5. **Phase 12: Next.js Frontend Integration & End-to-End Verification**
    - Wire Next.js repository layer to Spring Boot backend API.
    - Verify SSR/CSR hydration, checkout flow, and admin console against live PostgreSQL database.
 
@@ -119,3 +132,4 @@
 - `b8a9582` — *feat(shopping): implement Phase 4 shopping cart, wishlist, and coupon engine*
 - `fcd00d6` — *feat(order): implement Phase 5 checkout, orders, 5-step timeline tracking & admin fulfillment*
 - `15a2c07` — *feat(customer): implement Phase 6 customer accounts, saved addresses, profile management & Admin Customer 360*
+- `97dd17b` — *feat(inventory): implement Phase 7 inventory management, warehousing, stock movements ledger & low-stock alerts*

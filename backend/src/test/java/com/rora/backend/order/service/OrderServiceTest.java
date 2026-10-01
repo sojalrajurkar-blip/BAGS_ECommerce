@@ -6,6 +6,7 @@ import com.rora.backend.catalog.repository.ProductRepository;
 import com.rora.backend.catalog.repository.ProductVariantRepository;
 import com.rora.backend.common.exception.BadRequestException;
 import com.rora.backend.common.exception.ResourceNotFoundException;
+import com.rora.backend.inventory.service.InventoryService;
 import com.rora.backend.order.dto.*;
 import com.rora.backend.order.entity.Order;
 import com.rora.backend.order.entity.OrderItem;
@@ -62,6 +63,8 @@ class OrderServiceTest {
     private UserRepository userRepository;
     @Mock
     private CouponService couponService;
+    @Mock
+    private InventoryService inventoryService;
 
     @InjectMocks
     private OrderService orderService;
