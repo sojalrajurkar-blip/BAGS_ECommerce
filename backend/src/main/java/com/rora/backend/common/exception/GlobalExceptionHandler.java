@@ -29,6 +29,13 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
     }
 
+    @ExceptionHandler(DuplicateResourceException.class)
+    public ResponseEntity<ApiResponse<Void>> handleDuplicateResource(
+            DuplicateResourceException ex, HttpServletRequest request) {
+        ApiResponse<Void> response = ApiResponse.error(ex.getMessage(), null, request.getRequestURI());
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiResponse<Void>> handleValidationExceptions(
             MethodArgumentNotValidException ex, HttpServletRequest request) {
