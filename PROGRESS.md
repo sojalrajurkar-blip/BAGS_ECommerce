@@ -251,5 +251,5 @@
 - `ffa184b` — *feat(shipping): implement Phase 9 shipments, carrier tracking, milestone events & admin dispatch operations*
 - `28db7ac` — *feat(returns): implement Phase 10 returns, refunds, inspection workflows & payment linkage*
 - `36af7c8` — *feat(reviews): implement Phase 11 customer reviews, rating summaries, helpful voting & admin moderation*
-- `...` — *feat(cms-settings): implement Phase 12 CMS homepage content, editorial journal, FAQs & store settings*
+- `2c31162` — *feat(cms-settings): implement Phase 12 CMS homepage content, editorial journal, FAQs & store settings*
 
