@@ -8,7 +8,7 @@
 - Master Prompt: [`prompts/RORA_Antigravity_Backend_Implementation_Prompt.md`](file:///d:/ProjectFolder/RORA/prompts/RORA_Antigravity_Backend_Implementation_Prompt.md)
 - Software Requirements Specification: [`prompts/RORA_Backend_SRS.md`](file:///d:/ProjectFolder/RORA/prompts/RORA_Backend_SRS.md)
 
-**Backend Status:** Phases 0 through 11 Completed (153/153 tests passing, 100% pass rate). Ready for Phase 12 (CMS & Settings).
+**Backend Status:** Phases 0 through 12 Completed (182/182 tests passing, 100% pass rate). Ready for Phase 13 (Admin Platform).
 
 ---
 
@@ -184,18 +184,57 @@
   - `PATCH /api/v1/admin/reviews/{id}/status` — Status transition shortcut.
   - `DELETE /api/v1/admin/reviews/{id}` — Remove review and adjust product metrics.
 - Flyway migration `V11__seed_reviews.sql` seeding initial verified customer and editorial reviews (`rev-1`, `rev-2`, `rev-3`).
-- Full test suite passing: **153/153 tests passing (100% pass rate)**.
+- Test suite passing: 153/153 tests passing.
+
+#### ✅ Phase 12: CMS, Journal, FAQs & Store Operational Settings Engine
+- `CmsContent`, `JournalArticle`, `FaqItem`, and `StoreSetting` JPA domain entities with complete editorial content and key-value configuration lifecycle.
+- **Homepage CMS Engine:**
+  - Dynamic announcement bar (toggleable status, marquee text, CTA link).
+  - Editorial hero banner (eyebrows, headlines, sub-copy, dual CTAs, high-res background assets).
+  - Atelier craftsmanship feature stories with structured JSONB mapping.
+- **Editorial Journal Publishing Engine:**
+  - Automated slug generation with Unicode normalization and collision prevention.
+  - Multi-category article categorization (`Travel & Mobility`, `Philosophy & Lifestyle`, `Craftsmanship & Materials`, `Product Stories`).
+  - Read-time estimation, Markdown/HTML content rendering, and article tagging.
+  - Paginated search by category and keyword query.
+- **Grouped Store FAQs Knowledge Base:**
+  - Dynamic categorization (`General & Craftsmanship`, `Shipping & Delivery`, `Returns & Warranty`).
+  - Dual DTO compatibility mapping `question`/`answer` and frontend shorthand `q`/`a`.
+  - Display sorting, toggleable active visibility, and full admin CRUD.
+- **Store Operational Settings Engine:**
+  - Key-value configuration engine with type definitions (`STRING`, `NUMBER`, `BOOLEAN`, `JSON`).
+  - Real-time resolution of critical e-commerce parameters: `freeShippingThreshold` (₹1,999), `standardShippingFee` (₹199), `currency` (INR ₹), `supportEmail`, `supportPhone`, `warehouseAddress`, `taxRate` (18% GST), `inventoryAlertThreshold` (5).
+  - Single-key and batch update APIs protected by `SETTINGS_MANAGE` / `ROLE_ADMIN` RBAC.
+- **Public & Storefront APIs (`/api/v1/cms`, `/api/v1/settings`):**
+  - `GET /api/v1/cms/content` — Homepage hero banner, announcement bar, and craftsmanship story.
+  - `GET /api/v1/cms/journal` — List journal articles with category filter.
+  - `GET /api/v1/cms/journal/{slugOrId}` — Single editorial story view.
+  - `GET /api/v1/cms/faqs` — Grouped FAQ categories for customer support.
+  - `GET /api/v1/settings` & `GET /api/v1/settings/public` — Store operational parameters.
+- **Admin CMS & Settings Operations APIs (`/api/v1/admin/cms`, `/api/v1/admin/settings`):**
+  - `GET /api/v1/admin/cms/content`, `PUT /api/v1/admin/cms/content` — Homepage CMS backoffice management.
+  - `GET /api/v1/admin/cms/journal`, `GET /api/v1/admin/cms/journal/{id}` — Editorial article review.
+  - `POST /api/v1/admin/cms/journal`, `PUT /api/v1/admin/cms/journal/{id}`, `DELETE /api/v1/admin/cms/journal/{id}` — Article authoring and publishing.
+  - `GET /api/v1/admin/cms/faqs`, `POST /api/v1/admin/cms/faqs`, `PUT /api/v1/admin/cms/faqs/{id}`, `DELETE /api/v1/admin/cms/faqs/{id}` — FAQ knowledge base management.
+  - `GET /api/v1/admin/settings`, `PUT /api/v1/admin/settings` — Structured store settings configuration.
+  - `GET /api/v1/admin/settings/all`, `GET /api/v1/admin/settings/{key}`, `PUT /api/v1/admin/settings/{key}` — Raw key-value setting updates.
+- **Flyway Migration `V12__seed_cms_journal_faqs_settings.sql`:**
+  - Creates `faqs` schema table with indexes.
+  - Seeds canonical homepage editorial CMS content.
+  - Seeds 4 luxury journal articles (`art-1` to `art-4`).
+  - Seeds 9 categorized FAQ questions & answers (`faq-1` to `faq-9`).
+  - Seeds master store settings (`set-1` to `set-11`).
+- **Comprehensive Test Suite:** **182/182 tests passing (100% pass rate)**.
 
 ---
 
-### 2. Canonical Roadmap (Phases 12 — 17)
+### 2. Canonical Roadmap (Phases 13 — 17)
 
-1. **Phase 12: CMS & Settings** — Homepage banners, journal articles, FAQ items, store settings key-value store.
-2. **Phase 13: Admin Platform** — Consolidated admin dashboard, analytics KPIs, audit logs, granular permissions matrix.
-3. **Phase 14: Frontend Repository Migration** — Wire Next.js repository layer to Spring Boot backend APIs, preserve all animations/UI.
-4. **Phase 15: Full Local QA** — End-to-end customer and admin test matrix, failure scenarios, concurrency checks.
-5. **Phase 16: Production Preparation** — Docker containerization, CI/CD pipelines, cloud PostgreSQL plan, secrets management.
-6. **Phase 17: Production Deployment** — Deployment execution and live smoke test verification.
+1. **Phase 13: Admin Platform** — Consolidated admin dashboard, analytics KPIs, audit logs, user management, and granular permissions matrix.
+2. **Phase 14: Frontend Repository Migration** — Wire Next.js repository layer to Spring Boot backend APIs, preserve all animations/UI.
+3. **Phase 15: Full Local QA** — End-to-end customer and admin test matrix, failure scenarios, concurrency checks.
+4. **Phase 16: Production Preparation** — Docker containerization, CI/CD pipelines, cloud PostgreSQL plan, secrets management.
+5. **Phase 17: Production Deployment** — Deployment execution and live smoke test verification.
 
 ---
 
@@ -211,3 +250,6 @@
 - `7ef613d` — *feat(payment): implement Phase 8 local mock payments, transactions ledger & refund workflows*
 - `ffa184b` — *feat(shipping): implement Phase 9 shipments, carrier tracking, milestone events & admin dispatch operations*
 - `28db7ac` — *feat(returns): implement Phase 10 returns, refunds, inspection workflows & payment linkage*
+- `36af7c8` — *feat(reviews): implement Phase 11 customer reviews, rating summaries, helpful voting & admin moderation*
+- `...` — *feat(cms-settings): implement Phase 12 CMS homepage content, editorial journal, FAQs & store settings*
+

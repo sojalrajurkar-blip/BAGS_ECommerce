@@ -1,0 +1,20 @@
+package com.rora.backend.settings.dto;
+
+import jakarta.validation.constraints.NotBlank;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class UpdateSingleSettingRequest {
+
+    @NotBlank(message = "Setting value is required")
+    private String value;
+
+    private String type;
+    private String description;
+}
