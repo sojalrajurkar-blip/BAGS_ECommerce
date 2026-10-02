@@ -3,6 +3,7 @@
 -- RÓRA Luxury Reviews & Ratings Engine
 -- ============================================================================
 
+DROP TABLE IF EXISTS reviews CASCADE;
 CREATE TABLE IF NOT EXISTS reviews (
     id VARCHAR(64) PRIMARY KEY,
     product_id VARCHAR(64) REFERENCES products(id) ON DELETE CASCADE,
@@ -39,7 +40,7 @@ INSERT INTO reviews (
     'rev-1',
     'prod-1',
     'The Nomad Backpack',
-    'usr-cust-01',
+    NULL,
     'Elena Rostova',
     'Architect & Traveler',
     5,
@@ -56,7 +57,7 @@ INSERT INTO reviews (
     'rev-2',
     'prod-2',
     'The Classic Leather Tote',
-    'usr-cust-02',
+    NULL,
     'Marcus Vance',
     'Creative Director',
     5,
@@ -73,7 +74,7 @@ INSERT INTO reviews (
     'rev-3',
     'prod-4',
     'The Urban Sling',
-    'usr-cust-03',
+    NULL,
     'Sophie Lindqvist',
     'Photographer',
     5,

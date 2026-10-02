@@ -3,7 +3,8 @@
 -- Seed CMS Homepage Banners, Editorial Journal Articles, FAQs & Store Settings
 -- ============================================================================
 
--- 1. Create FAQs Table (if not exists)
+-- 1. Create Tables
+DROP TABLE IF EXISTS faqs CASCADE;
 CREATE TABLE IF NOT EXISTS faqs (
     id VARCHAR(64) PRIMARY KEY,
     category VARCHAR(128) NOT NULL,
@@ -18,8 +19,53 @@ CREATE TABLE IF NOT EXISTS faqs (
 CREATE INDEX IF NOT EXISTS idx_faqs_category ON faqs(category);
 CREATE INDEX IF NOT EXISTS idx_faqs_active ON faqs(is_active);
 
+DROP TABLE IF EXISTS cms_content CASCADE;
+CREATE TABLE IF NOT EXISTS cms_content (
+    id VARCHAR(64) PRIMARY KEY,
+    content_key VARCHAR(128) NOT NULL UNIQUE,
+    title VARCHAR(255),
+    content_data JSONB NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_cms_content_key ON cms_content(content_key);
+
+DROP TABLE IF EXISTS journal_articles CASCADE;
+CREATE TABLE IF NOT EXISTS journal_articles (
+    id VARCHAR(64) PRIMARY KEY,
+    slug VARCHAR(255) NOT NULL UNIQUE,
+    title VARCHAR(255) NOT NULL,
+    subtitle VARCHAR(255),
+    category VARCHAR(128) NOT NULL,
+    read_time VARCHAR(64) NOT NULL,
+    author VARCHAR(128),
+    image TEXT NOT NULL,
+    excerpt TEXT NOT NULL,
+    content TEXT NOT NULL,
+    tags JSONB,
+    published_at VARCHAR(128),
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_journal_articles_slug ON journal_articles(slug);
+CREATE INDEX IF NOT EXISTS idx_journal_articles_category ON journal_articles(category);
+
+DROP TABLE IF EXISTS store_settings CASCADE;
+CREATE TABLE IF NOT EXISTS store_settings (
+    id VARCHAR(64) PRIMARY KEY,
+    setting_key VARCHAR(128) NOT NULL UNIQUE,
+    setting_value TEXT NOT NULL,
+    setting_type VARCHAR(64) NOT NULL DEFAULT 'STRING',
+    description TEXT,
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_store_settings_key ON store_settings(setting_key);
+
 -- 2. Seed Homepage Editorial CMS Content
-INSERT INTO cms_content (id, content_key, title, content_data, updated_at) VALUES
+INSERT INTO cms_content (id, content_key, title, content_data, created_at, updated_at) VALUES
 (
     'cms-homepage-default',
     'homepage',

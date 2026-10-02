@@ -60,7 +60,24 @@ INSERT INTO user_roles (user_id, role_id) VALUES
     ('usr-4', 'role-product-mgr')
 ON CONFLICT DO NOTHING;
 
--- 3. Seed Master Audit Logs
+-- 3. Create Audit Logs Table & Seed Master Audit Logs
+DROP TABLE IF EXISTS audit_logs CASCADE;
+CREATE TABLE IF NOT EXISTS audit_logs (
+    id BIGSERIAL PRIMARY KEY,
+    action VARCHAR(128) NOT NULL,
+    actor VARCHAR(255) NOT NULL,
+    target VARCHAR(255),
+    entity_type VARCHAR(128),
+    ip_address VARCHAR(64),
+    status VARCHAR(64) NOT NULL DEFAULT 'SUCCESS',
+    severity VARCHAR(32) NOT NULL DEFAULT 'INFO',
+    details JSONB,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_audit_logs_created_at ON audit_logs(created_at);
+CREATE INDEX IF NOT EXISTS idx_audit_logs_action ON audit_logs(action);
+
 INSERT INTO audit_logs (action, actor, target, entity_type, ip_address, status, severity, details, created_at) VALUES
     (
         'Product Price Updated',

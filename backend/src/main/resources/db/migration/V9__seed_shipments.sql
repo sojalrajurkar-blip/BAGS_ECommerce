@@ -5,6 +5,8 @@
 -- ============================================================================
 
 -- 1. Create Shipments Table
+DROP TABLE IF EXISTS shipment_events CASCADE;
+DROP TABLE IF EXISTS shipments CASCADE;
 CREATE TABLE IF NOT EXISTS shipments (
     id VARCHAR(64) PRIMARY KEY,
     order_id VARCHAR(64) NOT NULL REFERENCES orders(id) ON DELETE CASCADE,

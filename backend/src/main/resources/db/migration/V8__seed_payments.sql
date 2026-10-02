@@ -5,6 +5,8 @@
 -- ============================================================================
 
 -- 1. Create Payments Table
+DROP TABLE IF EXISTS payment_transactions CASCADE;
+DROP TABLE IF EXISTS payments CASCADE;
 CREATE TABLE IF NOT EXISTS payments (
     id VARCHAR(64) PRIMARY KEY,
     order_id VARCHAR(64) NOT NULL REFERENCES orders(id) ON DELETE CASCADE,

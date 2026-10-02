@@ -5,6 +5,9 @@
 -- ============================================================================
 
 -- 1. Create Returns Table
+DROP TABLE IF EXISTS refunds CASCADE;
+DROP TABLE IF EXISTS return_items CASCADE;
+DROP TABLE IF EXISTS returns CASCADE;
 CREATE TABLE IF NOT EXISTS returns (
     id VARCHAR(64) PRIMARY KEY,
     order_id VARCHAR(64) NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
