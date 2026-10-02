@@ -440,4 +440,17 @@ export interface StoreContextType {
   setAdminProducts: React.Dispatch<React.SetStateAction<Product[]>>;
   adminCategories: Category[];
   setAdminCategories: React.Dispatch<React.SetStateAction<Category[]>>;
+  user: {
+    id: string;
+    name: string;
+    email: string;
+    status?: string;
+    avatarUrl?: string;
+    roles: string[];
+    permissions?: string[];
+  } | null;
+  isAuthenticated: boolean;
+  login: (email: string, password: string) => Promise<boolean>;
+  register: (name: string, email: string, password: string, phone?: string) => Promise<boolean>;
+  logout: () => void;
 }

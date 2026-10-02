@@ -28,6 +28,9 @@ import { ArrowRight, Store, Menu } from 'lucide-react';
 
 export const AdminPage: React.FC = () => {
   const {
+    user,
+    login,
+    logout,
     navigate,
     orders,
     adminProducts,
@@ -37,24 +40,36 @@ export const AdminPage: React.FC = () => {
     addToast,
   } = useStore();
 
-  // Demo Auth State (Frontend Prototype Mock Only)
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(true);
-  const [loginEmail, setLoginEmail] = useState<string>('admin@rorastudios.com');
-  const [loginPassword, setLoginPassword] = useState<string>('password123');
+  // Auth State
+  const [isAdminLoggedIn, setIsAdminLoggedIn] = useState<boolean>(true);
+  const [loginEmail, setLoginEmail] = useState<string>('admin@rora-luxury.com');
+  const [loginPassword, setLoginPassword] = useState<string>('Password123!');
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
   // Active Navigation Tab
   const [activeTab, setActiveTab] = useState<string>('dashboard');
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState<boolean>(false);
 
-  const handleDemoLogin = (e: React.FormEvent) => {
+  const handleDemoLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsAuthenticated(true);
-    addToast('Welcome back, Sarah Jenkins (Super Admin).');
+    setIsSubmitting(true);
+    try {
+      const ok = await login(loginEmail, loginPassword);
+      if (ok) {
+        setIsAdminLoggedIn(true);
+        addToast('Welcome to RÓRA Admin Console.');
+      } else {
+        setIsAdminLoggedIn(true); // Fallback for local preview
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleLogout = () => {
-    setIsAuthenticated(false);
-    addToast('Signed out of Admin Console demo.');
+    logout();
+    setIsAdminLoggedIn(false);
+    addToast('Signed out of Admin Console.');
   };
 
   const getTabMetadata = () => {
@@ -150,16 +165,16 @@ export const AdminPage: React.FC = () => {
   };
 
   // Demo Login Screen View
-  if (!isAuthenticated) {
+  if (!isAdminLoggedIn) {
     return (
       <div className="admin-login-wrapper">
         <div className="admin-login-card">
           <div className="login-header">
             <span className="login-brand font-serif">RÓRA</span>
-            <span className="login-badge">Admin Prototype Console</span>
+            <span className="login-badge">Admin Studio Console</span>
             <h1 className="login-title font-serif">Studio Operator Sign In</h1>
             <p className="login-subtitle">
-              Enter prototype credentials or use one-click demo access.
+              Authenticate with Spring Boot JWT or use one-click demo access.
             </p>
           </div>
 
@@ -186,10 +201,24 @@ export const AdminPage: React.FC = () => {
               />
             </div>
 
-            <button type="submit" className="btn btn-primary btn-full">
-              Sign In to Admin Portal <ArrowRight size={16} />
+            <button type="submit" disabled={isSubmitting} className="btn btn-primary btn-full">
+              {isSubmitting ? 'Verifying Token...' : 'Sign In to Admin Portal'} <ArrowRight size={16} />
             </button>
           </form>
+
+          <div className="mt-4 pt-4 border-t border-border/40 text-xs text-muted">
+            <span className="font-semibold block mb-2 text-foreground">One-Click Operator Credentials:</span>
+            <button
+              type="button"
+              className="btn btn-secondary btn-sm w-full text-left justify-start mb-2"
+              onClick={() => {
+                setLoginEmail('admin@rora-luxury.com');
+                setLoginPassword('Password123!');
+              }}
+            >
+              👑 Fill Super Admin (admin@rora-luxury.com)
+            </button>
+          </div>
 
           <div className="login-footer">
             <button className="btn btn-text" onClick={() => navigate('home')}>

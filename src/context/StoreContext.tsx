@@ -6,7 +6,9 @@ import {
   productRepository,
   categoryRepository,
   orderRepository,
-  couponRepository
+  couponRepository,
+  authRepository,
+  UserSummary
 } from '../data/repositories';
 import { PRODUCTS, CATEGORIES, MOCK_ORDERS } from '../data/mockData';
 
@@ -201,6 +203,47 @@ export const StoreProvider = ({ children }: { children: React.ReactNode }) => {
       console.error(e);
     }
   }, [wishlist, hasHydrated]);
+
+  // Authentication State
+  const [user, setUser] = useState<UserSummary | null>(null);
+
+  useEffect(() => {
+    authRepository.getCurrentUser().then(u => {
+      if (u) setUser(u);
+    });
+  }, []);
+
+  const login = async (email: string, password: string): Promise<boolean> => {
+    try {
+      const res = await authRepository.login({ email, password });
+      setUser(res.user);
+      addToast(`Welcome back, ${res.user.name}.`, 'success');
+      return true;
+    } catch (e) {
+      console.error(e);
+      addToast('Invalid credentials. Please check your email and password.', 'error');
+      return false;
+    }
+  };
+
+  const register = async (name: string, email: string, password: string, phone?: string): Promise<boolean> => {
+    try {
+      const res = await authRepository.register({ name, email, password, phone });
+      setUser(res.user);
+      addToast(`Account created successfully. Welcome to RÓRA, ${res.user.name}.`, 'success');
+      return true;
+    } catch (e) {
+      console.error(e);
+      addToast('Registration failed. Please try again.', 'error');
+      return false;
+    }
+  };
+
+  const logout = () => {
+    authRepository.logout();
+    setUser(null);
+    addToast('You have been signed out.');
+  };
 
   // Demo state seeding helper
   const seedDemoData = () => {
@@ -435,7 +478,12 @@ export const StoreProvider = ({ children }: { children: React.ReactNode }) => {
         adminProducts,
         setAdminProducts,
         adminCategories,
-        setAdminCategories
+        setAdminCategories,
+        user,
+        isAuthenticated: Boolean(user),
+        login,
+        register,
+        logout
       }}
     >
       {children}

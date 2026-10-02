@@ -5,4 +5,6 @@ export { reviewRepository } from './reviewRepository';
 export { couponRepository } from './couponRepository';
 export { contentRepository } from './contentRepository';
 export { adminRepository } from './adminRepository';
+export { authRepository } from './authRepository';
+export type { UserSummary, AuthResponseData } from './authRepository';
 export { apiClient, getSessionId, getAuthToken, setAuthToken } from '../apiClient';
