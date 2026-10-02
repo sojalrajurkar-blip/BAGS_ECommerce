@@ -6,6 +6,7 @@ import { productRepository } from '../data/repositories';
 import { ProductCard } from '../components/common/ProductCard';
 import { Product, ColorVariant } from '../types/domain';
 import { Breadcrumbs } from '../components/common/Breadcrumbs';
+import { RoraProductSequence } from '../components/product/RoraProductSequence';
 import {
   useGsapContext,
   revealPageHeader,
@@ -390,6 +391,14 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({ productId:
           )}
         </div>
       </section>
+
+      {/* 300-Frame GSAP Product Image Sequence Storytelling Section */}
+      <RoraProductSequence
+        productName={product.name}
+        title={`Inside ${product.name}`}
+        eyebrow="300-Frame Precision Deconstruction"
+        description="Scroll to explore every layer, stitch, and hand-finished element of this piece."
+      />
 
       {/* Editorial Lookbook Banner for PDP */}
       <section className="pdp-lookbook-banner">
