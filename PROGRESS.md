@@ -347,5 +347,25 @@
   - Backend Test Suite: **202 / 202 tests passing (100% pass rate)**.
   - Frontend Standalone Build: `npm run build` succeeded with **0 errors across all 18 routes**.
 
+#### ✅ Phase 17: Production Deployment & Smoke Verification
+- **Automated Smoke Test Verification Matrix (`ProductionDeploymentSmokeVerificationIntegrationTest`):**
+  1. **Health Probes:** `/actuator/health` returning `UP`, `/actuator/info` responsive.
+  2. **Customer Identity:** User registration and JWT authentication generation.
+  3. **Catalog & Merchandising:** Categories retrieval and individual product details.
+  4. **Search & Discovery:** Faceted keyword search filtering.
+  5. **Shopping Operations:** Cart addition and inspection with guest session ID tracking.
+  6. **Checkout & Order Creation:** Order placement with coupon discount calculation (`RORA10`) and `#RRA...` tracking number generation.
+  7. **Order Tracking & Timeline:** Real-time 5-stage milestone timeline verification (`$.data.timeline`).
+  8. **Carrier Consignment & Shipment:** Admin consignment dispatch (`POST /api/v1/admin/shipments`) and milestone event recording (`DELIVERED`).
+  9. **Customer Returns & Physical Inspection:** Customer return submission and admin physical QA grading (`PASSED_PRISTINE`).
+  10. **Automated Refund:** Admin return approval triggering automatic banking refund (`APPROVED_AND_REFUNDED`).
+  11. **Verified Patron Review:** Customer review submission with verified buyer badge.
+  12. **Admin Operations:** Dashboard sales KPIs, audit logs generation and inspection (`POST /api/v1/admin/audit-logs`), and store operational settings lookup (`GET /api/v1/admin/settings`).
+- **Production Artifact Verification:**
+  - Spring Boot Executable Production Archive: `backend/target/rora-backend-1.0.0-SNAPSHOT.jar` successfully built.
+  - Next.js Standalone Bundle: Output verified across 18/18 static and dynamic routes.
+- **Master Test Suite Final Status:** **204 / 204 tests passing (100% pass rate, 0 failures, 0 errors across 36 test classes)**.
+- **Canonical Roadmap Status:** **ALL 17 PHASES COMPLETED AND VERIFIED (100% COMPLETE)**.
+
 
 
