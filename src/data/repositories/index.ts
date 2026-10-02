@@ -5,3 +5,4 @@ export { reviewRepository } from './reviewRepository';
 export { couponRepository } from './couponRepository';
 export { contentRepository } from './contentRepository';
 export { adminRepository } from './adminRepository';
+export { apiClient, getSessionId, getAuthToken, setAuthToken } from '../apiClient';

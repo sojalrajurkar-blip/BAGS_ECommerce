@@ -281,5 +281,29 @@
 - `36af7c8` — *feat(reviews): implement Phase 11 customer reviews, rating summaries, helpful voting & admin moderation*
 - `2c31162` — *feat(cms-settings): implement Phase 12 CMS homepage content, editorial journal, FAQs & store settings*
 - `e5b70d5` — *feat(admin-platform): implement Phase 13 consolidated admin dashboard, analytics KPIs, audit logs & user management*
+- `Phase 14` — *feat(frontend-migration): wire Next.js repository implementations to Spring Boot REST API with centralized apiClient, session tracking & resilient fallback*
+
+---
+
+#### ✅ Phase 14: Frontend Repository Migration
+- **Centralized API Client (`src/data/apiClient.ts`):**
+  - Configured base URL (`process.env.NEXT_PUBLIC_API_URL` with default `http://localhost:8080/api/v1`).
+  - Persistent guest session ID generation & management via `X-Session-ID` header.
+  - Automatic `Authorization: Bearer <token>` injection for authenticated customer/admin requests.
+  - Standardized `ApiResponse<T>` unwrapping (`response.data.data` -> `data`).
+  - Graceful fallback resilience for offline/local environments.
+- **Repository Implementations Migrated (`src/data/repositories/`):**
+  - `categoryRepository.ts` -> `/api/v1/categories`, `/api/v1/categories/{slug}`.
+  - `productRepository.ts` -> `/api/v1/products`, `/api/v1/products/featured`, `/api/v1/products/best-sellers`, `/api/v1/products/new-arrivals`, `/api/v1/products/search`, `/api/v1/products/{idOrSlug}`, `/api/v1/products/{idOrSlug}/related`.
+  - `couponRepository.ts` -> `/api/v1/coupons/active`, `/api/v1/coupons/validate`.
+  - `orderRepository.ts` -> `/api/v1/checkout/place-order`, `/api/v1/orders/my-orders`, `/api/v1/orders/{id}`, `/api/v1/orders/track/{orderNumber}` with bidirectional DTO mapping.
+  - `reviewRepository.ts` -> `/api/v1/reviews/featured`, `/api/v1/reviews/product/{productId}`, `/api/v1/reviews`.
+  - `contentRepository.ts` -> `/api/v1/cms/faqs`, `/api/v1/cms/journal`, `/api/v1/cms/journal/{slug}`, `/api/v1/cms/content`, `/api/v1/settings`.
+  - `adminRepository.ts` -> `/api/v1/admin/dashboard/summary`, `/api/v1/admin/customers`, `/api/v1/admin/payments`, `/api/v1/admin/shipments`, `/api/v1/admin/returns`, `/api/v1/admin/refunds`, `/api/v1/admin/inventory`, `/api/v1/admin/users`, `/api/v1/admin/roles`, `/api/v1/admin/settings`, `/api/v1/admin/audit-logs`, `/api/v1/admin/cms`.
+- **Validation & Compatibility:**
+  - Zero UI layout, animation, CSS, or UX regressions.
+  - Next.js production build (`npm run build`) succeeded across 18/18 static and dynamic routes.
+  - Spring Boot backend test suite: **200/200 tests passing (100% pass rate)**.
+
 
 
