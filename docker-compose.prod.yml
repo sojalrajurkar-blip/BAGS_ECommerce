@@ -1,0 +1,43 @@
+services:
+  backend:
+    image: ${DOCKER_REGISTRY:-ghcr.io}/${DOCKER_IMAGE_PREFIX:-rora}/backend:${IMAGE_TAG:-latest}
+    restart: always
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      DB_URL: ${PROD_DB_URL}
+      DB_USERNAME: ${PROD_DB_USERNAME}
+      DB_PASSWORD: ${PROD_DB_PASSWORD}
+      DB_POOL_MAX_SIZE: ${DB_POOL_MAX_SIZE:-25}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRATION_MS: ${JWT_EXPIRATION_MS:-86400000}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-https://rora-luxury.com,https://www.rora-luxury.com}
+      SWAGGER_ENABLED: "false"
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          cpus: '1.5'
+          memory: 1536M
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+
+  frontend:
+    image: ${DOCKER_REGISTRY:-ghcr.io}/${DOCKER_IMAGE_PREFIX:-rora}/frontend:${IMAGE_TAG:-latest}
+    restart: always
+    environment:
+      NODE_ENV: production
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-https://api.rora-luxury.com/api/v1}
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1024M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
