@@ -25,6 +25,13 @@ export interface RoraProductSequenceProps {
   description?: string;
   phases?: SequencePhase[];
   productName?: string;
+  isHeroMode?: boolean;
+  primaryCtaText?: string;
+  onPrimaryCta?: () => void;
+  secondaryCtaText?: string;
+  onSecondaryCta?: () => void;
+  bottomMetaLeft?: string;
+  bottomMetaRight?: string;
 }
 
 const DEFAULT_FRAME_COUNT = 300;
@@ -67,6 +74,13 @@ export const RoraProductSequence: React.FC<RoraProductSequenceProps> = ({
   description = 'Scroll down to explore the 300-frame deconstruction of the RÓRA Handcrafted Silhouette.',
   phases = DEFAULT_PHASES,
   productName = 'The Artisan Atelier Handbag',
+  isHeroMode = false,
+  primaryCtaText,
+  onPrimaryCta,
+  secondaryCtaText,
+  onSecondaryCta,
+  bottomMetaLeft,
+  bottomMetaRight,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -406,12 +420,70 @@ export const RoraProductSequence: React.FC<RoraProductSequenceProps> = ({
             style={{
               fontSize: '0.875rem',
               color: 'rgba(247, 244, 238, 0.65)',
-              margin: 0,
+              margin: '0 0 1rem 0',
               fontFamily: 'var(--font-body, sans-serif)',
             }}
           >
             {description}
           </p>
+
+          {/* Optional Hero CTAs */}
+          {(primaryCtaText || secondaryCtaText) && (
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '0.85rem',
+                pointerEvents: 'auto',
+                marginTop: '0.5rem',
+              }}
+            >
+              {primaryCtaText && (
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={onPrimaryCta}
+                  style={{
+                    backgroundColor: '#C9B99F',
+                    color: '#141311',
+                    fontWeight: 500,
+                    padding: '0.65rem 1.4rem',
+                    fontSize: '0.85rem',
+                    borderRadius: '999px',
+                    border: 'none',
+                    cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.4rem',
+                    transition: 'transform 0.2s ease, background-color 0.2s ease',
+                  }}
+                >
+                  {primaryCtaText}
+                </button>
+              )}
+              {secondaryCtaText && (
+                <button
+                  type="button"
+                  onClick={onSecondaryCta}
+                  style={{
+                    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+                    color: '#F7F4EE',
+                    fontWeight: 400,
+                    padding: '0.65rem 1.4rem',
+                    fontSize: '0.85rem',
+                    borderRadius: '999px',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    backdropFilter: 'blur(8px)',
+                    cursor: 'pointer',
+                    transition: 'background-color 0.2s ease',
+                  }}
+                >
+                  {secondaryCtaText}
+                </button>
+              )}
+            </div>
+          )}
         </header>
 
         {/* The Central Canvas Drawing Surface */}

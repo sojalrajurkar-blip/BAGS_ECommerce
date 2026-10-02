@@ -8,6 +8,7 @@ import {
   reviewRepository,
 } from '../data/repositories';
 import { ProductCard } from '../components/common/ProductCard';
+import { RoraProductSequence } from '../components/product/RoraProductSequence';
 import {
   useGsapContext,
   revealHero,
@@ -132,48 +133,18 @@ export const HomePage: React.FC = () => {
 
   return (
     <div className="home-page" ref={pageRef}>
-      {/* 1. EDITORIAL HERO SECTION */}
-      <section className="hero-section">
-        <div className="hero-backdrop-image-wrap">
-          <img
-            src="https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=2000&q=85"
-            alt="RÓRA Nomad Collection"
-            className="hero-backdrop-image"
-          />
-          <div className="hero-overlay" />
-        </div>
-
-        <div className="container hero-content-container">
-          <div className="hero-content">
-            <span className="hero-eyebrow">The 2026 Collection</span>
-            <h1 className="hero-title">
-              Thoughtfully Designed for Modern Journeys
-            </h1>
-            <p className="hero-description">
-              Premium bags engineered for work, travel and everyday adventures. Built for a more considered tomorrow with weatherproof certified materials.
-            </p>
-            <div className="hero-cta-group">
-              <button
-                className="btn btn-primary btn-lg"
-                onClick={() => navigate('shop')}
-              >
-                Explore Collection <ArrowRight size={18} />
-              </button>
-              <button
-                className="btn hero-btn-secondary"
-                onClick={() => navigate('about')}
-              >
-                Discover Our Story
-              </button>
-            </div>
-          </div>
-
-          <div className="hero-bottom-meta">
-            <span className="hero-pagination-label">01 / 03 — The Nomad Series</span>
-            <span className="hero-location-label">Photographed in the Dolomites</span>
-          </div>
-        </div>
-      </section>
+      {/* 1. 300-FRAME GSAP CANVAS STORYTELLING HERO SECTION */}
+      <RoraProductSequence
+        isHeroMode={true}
+        eyebrow="The 2026 Collection — Handcrafted Atelier"
+        title="Thoughtfully Designed for Modern Journeys"
+        description="Scroll down to explore the 300-frame precision deconstruction of the RÓRA Handcrafted Silhouette."
+        productName="The Artisan Atelier Silhouette"
+        primaryCtaText="Explore Collection"
+        onPrimaryCta={() => navigate('shop')}
+        secondaryCtaText="Discover Our Story"
+        onSecondaryCta={() => navigate('about')}
+      />
 
       {/* 2. EXPLORE OUR COLLECTION (Category Showcase) */}
       <section className="section-md category-showcase-section">
