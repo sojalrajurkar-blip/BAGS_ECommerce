@@ -280,6 +280,6 @@
 - `28db7ac` — *feat(returns): implement Phase 10 returns, refunds, inspection workflows & payment linkage*
 - `36af7c8` — *feat(reviews): implement Phase 11 customer reviews, rating summaries, helpful voting & admin moderation*
 - `2c31162` — *feat(cms-settings): implement Phase 12 CMS homepage content, editorial journal, FAQs & store settings*
-- `...` — *feat(admin-platform): implement Phase 13 consolidated admin dashboard, analytics KPIs, audit logs & user management*
+- `e5b70d5` — *feat(admin-platform): implement Phase 13 consolidated admin dashboard, analytics KPIs, audit logs & user management*
 
 
