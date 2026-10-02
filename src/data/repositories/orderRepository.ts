@@ -1,6 +1,15 @@
+/**
+ * ============================================================================
+ * RÓRA Luxury Atelier — Order & Checkout Repository
+ * ============================================================================
+ * Interfaces with Spring Boot `/api/v1/orders` and `/api/v1/checkout/place-order`
+ * for authoritative server-side price calculation, inventory depletion, payment
+ * ledger recording, and live tracking.
+ */
+
 import { MOCK_ORDERS } from '../mockData';
-import { Order, OrderItem, OrderTimelineEvent } from '../../types/domain';
-import { apiClient } from '../apiClient';
+import { Order, OrderItem, OrderTimelineEvent, Address } from '../../types/domain';
+import { apiClient, getSessionId } from '../apiClient';
 
 interface BackendOrderItemDto {
   id?: number | string;
@@ -29,7 +38,7 @@ interface BackendTimelineDto {
   completed?: boolean;
 }
 
-interface BackendOrderDto {
+export interface BackendOrderDto {
   id: number | string;
   orderNumber: string;
   trackingNumber?: string;
@@ -58,6 +67,16 @@ interface BackendOrderDto {
   timeline?: BackendTimelineDto[];
 }
 
+export interface PlaceOrderPayload {
+  customerName: string;
+  customerEmail: string;
+  customerPhone?: string;
+  shippingAddress: Address;
+  billingAddress?: Address;
+  paymentMethod?: string;
+  couponCode?: string;
+}
+
 function mapBackendOrder(dto: BackendOrderDto): Order {
   const items: OrderItem[] = (dto.items || []).map(item => ({
     id: String(item.id || ''),
@@ -65,7 +84,7 @@ function mapBackendOrder(dto: BackendOrderDto): Order {
     name: item.name || item.productName || 'Luxury Essential',
     color: item.color || item.colorName || 'Midnight Black',
     colorName: item.colorName || item.color || 'Midnight Black',
-    image: item.image || item.productImage || '',
+    image: item.image || item.productImage || 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&q=80&w=800',
     price: item.price ?? item.unitPrice ?? 0,
     quantity: item.quantity || 1
   }));
@@ -119,45 +138,74 @@ function mapBackendOrder(dto: BackendOrderDto): Order {
   };
 }
 
+const USE_MOCK = process.env.NEXT_PUBLIC_USE_MOCK_DATA === 'true';
+
 export const orderRepository = {
+  /**
+   * Fetches customer's orders from the backend.
+   */
   async getOrders(): Promise<Order[]> {
-    try {
-      const data = await apiClient.get<BackendOrderDto[] | { content: BackendOrderDto[] }>('/orders/my-orders');
-      const list = Array.isArray(data) ? data : (data?.content || []);
-      if (list.length > 0) {
-        return list.map(mapBackendOrder);
+    if (!USE_MOCK) {
+      try {
+        const data = await apiClient.get<BackendOrderDto[] | { content: BackendOrderDto[] }>('/orders/my-orders');
+        const list = Array.isArray(data) ? data : (data?.content || []);
+        if (list.length > 0) {
+          return list.map(mapBackendOrder);
+        }
+      } catch (err) {
+        console.warn('Backend orders fetch failed, falling back to seed orders:', err);
       }
-    } catch (err) {
-      console.warn('Backend orders API unavailable, fallback to local dataset:', err);
     }
-    return Promise.resolve([...(MOCK_ORDERS as unknown as Order[])]);
+    return (MOCK_ORDERS as unknown as Order[]);
   },
 
+  /**
+   * Fetches order by ID or order number.
+   */
   async getOrderById(id: string): Promise<Order | null> {
     const cleanId = id.replace('#', '');
-    try {
-      const data = await apiClient.get<BackendOrderDto>(`/orders/${cleanId}`);
-      if (data && (data.id || data.orderNumber)) {
-        return mapBackendOrder(data);
+    if (!USE_MOCK) {
+      try {
+        const data = await apiClient.get<BackendOrderDto>(`/orders/${cleanId}`);
+        if (data && (data.id || data.orderNumber)) {
+          return mapBackendOrder(data);
+        }
+      } catch (err) {
+        console.warn(`Backend fetch for order "${cleanId}" failed:`, err);
       }
-    } catch {
-      // Fallback
     }
 
     const order = (MOCK_ORDERS as unknown as Order[]).find(
       o => o.id === cleanId || o.orderNumber.replace('#', '') === cleanId
     );
-    return Promise.resolve(order || null);
+    return order || null;
   },
 
-  async createOrder(orderPayload: Partial<Order>): Promise<Order> {
+  /**
+   * Authoritative order placement connecting to `/api/v1/checkout/place-order`.
+   */
+  async placeOrder(orderPayload: PlaceOrderPayload): Promise<Order> {
+    const sessionId = getSessionId();
+
     try {
       const payload = {
-        shippingAddress: orderPayload.shippingAddress,
+        customerName: orderPayload.customerName || 'Valued Client',
+        customerEmail: orderPayload.customerEmail || 'client@rora-luxury.com',
+        customerPhone: orderPayload.customerPhone || '+91 98200 12345',
+        shippingAddress: {
+          fullName: orderPayload.shippingAddress.fullName || orderPayload.customerName,
+          street: orderPayload.shippingAddress.street || orderPayload.shippingAddress.addressLine1 || 'Main Street',
+          addressLine2: orderPayload.shippingAddress.addressLine2,
+          city: orderPayload.shippingAddress.city || 'Mumbai',
+          state: orderPayload.shippingAddress.state || 'Maharashtra',
+          postalCode: orderPayload.shippingAddress.postalCode || '400001',
+          country: orderPayload.shippingAddress.country || 'India',
+          phone: orderPayload.shippingAddress.phone || orderPayload.customerPhone,
+        },
         billingAddress: orderPayload.billingAddress || orderPayload.shippingAddress,
-        paymentMethod: orderPayload.paymentMethod || 'Credit Card',
-        paymentProvider: 'Razorpay',
-        customerNotes: 'Deliver between 10am - 6pm'
+        paymentMethod: orderPayload.paymentMethod || 'Mock Gateway',
+        couponCode: orderPayload.couponCode,
+        sessionId,
       };
 
       const res = await apiClient.post<BackendOrderDto>('/checkout/place-order', payload);
@@ -165,7 +213,7 @@ export const orderRepository = {
         return mapBackendOrder(res);
       }
     } catch (err) {
-      console.warn('Backend place-order API error, creating simulated order:', err);
+      console.warn('Backend place-order failed, creating simulated order for demo:', err);
     }
 
     const newOrderNumber = `#RRA${Math.floor(10000 + Math.random() * 90000)}`;
@@ -176,13 +224,7 @@ export const orderRepository = {
       status: 'Processing',
       total: 0,
       items: [],
-      shippingAddress: {
-        city: '',
-        state: '',
-        postalCode: '',
-        country: 'India'
-      },
-      ...orderPayload,
+      shippingAddress: orderPayload.shippingAddress,
       timeline: [
         { step: 'Order Placed', time: 'Just now', completed: true },
         { step: 'Payment Verified', time: 'Just now', completed: true },
@@ -191,18 +233,23 @@ export const orderRepository = {
         { step: 'Delivered', time: 'Pending', completed: false }
       ]
     };
-    return Promise.resolve(newOrder);
+    return newOrder;
   },
 
+  /**
+   * Tracks an order with live logistics events.
+   */
   async trackOrder(orderNumber: string): Promise<Order | null> {
     const cleanNumber = orderNumber.replace('#', '');
-    try {
-      const data = await apiClient.get<BackendOrderDto>(`/orders/track/${cleanNumber}`);
-      if (data && (data.id || data.orderNumber)) {
-        return mapBackendOrder(data);
+    if (!USE_MOCK) {
+      try {
+        const data = await apiClient.get<BackendOrderDto>(`/orders/track/${cleanNumber}`);
+        if (data && (data.id || data.orderNumber)) {
+          return mapBackendOrder(data);
+        }
+      } catch {
+        // Fallback to regular order lookup
       }
-    } catch {
-      // Fallback
     }
     return this.getOrderById(cleanNumber);
   }

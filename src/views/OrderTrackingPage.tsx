@@ -1,11 +1,12 @@
 'use client';
 
-import React, { useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useStore } from '../context/StoreContext';
 import { Order } from '../types/domain';
+import { orderRepository } from '../data/repositories';
 import { Breadcrumbs } from '../components/common/Breadcrumbs';
 import { useGsapContext, revealPageHeader, staggerFadeInUp, fadeInUp } from '../animations';
-import { CheckCircle2, Clock, Truck, Package, MapPin, RefreshCw, ArrowLeft } from 'lucide-react';
+import { CheckCircle2, Clock, Truck, Package, MapPin, RefreshCw, ArrowLeft, Loader2 } from 'lucide-react';
 
 export interface OrderTrackingPageProps {
   orderId?: string;
@@ -14,8 +15,26 @@ export interface OrderTrackingPageProps {
 export const OrderTrackingPage: React.FC<OrderTrackingPageProps> = ({ orderId: propOrderId } = {}) => {
   const { currentRoute, orders, navigate, addToast } = useStore();
   const orderId = propOrderId || currentRoute.params?.orderId;
-  const order = orders.find((o: Order) => o.id === orderId) || orders[0];
+  const [order, setOrder] = useState<Order | null>(() => {
+    return orders.find((o: Order) => o.id === orderId || o.orderNumber.replace('#', '') === orderId) || orders[0] || null;
+  });
+  const [loading, setLoading] = useState<boolean>(!order);
   const pageRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (orderId) {
+      const found = orders.find((o: Order) => o.id === orderId || o.orderNumber.replace('#', '') === orderId);
+      if (found) {
+        setOrder(found);
+        setLoading(false);
+      } else {
+        setLoading(true);
+        orderRepository.trackOrder(String(orderId)).then(fetched => {
+          if (fetched) setOrder(fetched);
+        }).finally(() => setLoading(false));
+      }
+    }
+  }, [orderId, orders]);
 
   useGsapContext((self, isReduced) => {
     if (isReduced) return;

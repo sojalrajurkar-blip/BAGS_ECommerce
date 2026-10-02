@@ -8,6 +8,8 @@ import {
   orderRepository,
   couponRepository,
   authRepository,
+  cartRepository,
+  wishlistRepository,
   UserSummary
 } from '../data/repositories';
 import { PRODUCTS, CATEGORIES, MOCK_ORDERS } from '../data/mockData';
@@ -160,9 +162,9 @@ export const StoreProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
-  // Cart State (Persisted in localStorage)
+  // Cart State (Persisted in localStorage & synced with backend)
   const [cart, setCart] = useState<CartItem[]>([]);
-  // Wishlist State (Persisted)
+  // Wishlist State (Persisted & synced with backend)
   const [wishlist, setWishlist] = useState<string[]>([]);
   const [hasHydrated, setHasHydrated] = useState(false);
 
@@ -212,6 +214,21 @@ export const StoreProvider = ({ children }: { children: React.ReactNode }) => {
       if (u) setUser(u);
     });
   }, []);
+
+  // Load orders & wishlist when auth changes
+  useEffect(() => {
+    orderRepository.getOrders().then(ordList => {
+      if (ordList && ordList.length > 0) {
+        setOrders(ordList);
+      }
+    }).catch(() => {});
+
+    wishlistRepository.getWishlist().then(wRes => {
+      if (wRes && wRes.items && wRes.items.length > 0) {
+        setWishlist(wRes.items.map(item => item.productId));
+      }
+    }).catch(() => {});
+  }, [user]);
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
@@ -325,6 +342,13 @@ export const StoreProvider = ({ children }: { children: React.ReactNode }) => {
       }
     });
 
+    // Backend background sync
+    cartRepository.addItem({
+      productId: product.id,
+      quantity,
+      colorName: selectedColor.name,
+    }).catch(() => {});
+
     addToast(`Added "${product.name}" (${selectedColor.name}) to your bag.`);
     setIsCartDrawerOpen(true);
   };
@@ -337,16 +361,19 @@ export const StoreProvider = ({ children }: { children: React.ReactNode }) => {
     setCart(prev =>
       prev.map(item => (item.id === cartItemId ? { ...item, quantity } : item))
     );
+    cartRepository.updateQuantity(cartItemId, quantity).catch(() => {});
   };
 
   const removeFromCart = (cartItemId: string) => {
     setCart(prev => prev.filter(item => item.id !== cartItemId));
+    cartRepository.removeItem(cartItemId).catch(() => {});
     addToast('Item removed from bag.');
   };
 
   const moveToWishlist = (cartItem: CartItem) => {
     if (cartItem.productId && !wishlist.includes(cartItem.productId)) {
       setWishlist(prev => [...prev, cartItem.productId!]);
+      wishlistRepository.addItem(cartItem.productId!).catch(() => {});
     }
     removeFromCart(cartItem.id);
     addToast(`Moved "${cartItem.product.name}" to your wishlist.`);
@@ -358,9 +385,11 @@ export const StoreProvider = ({ children }: { children: React.ReactNode }) => {
     const product = (PRODUCTS as Product[]).find(p => p.id === productId);
     if (exists) {
       setWishlist(prev => prev.filter(id => id !== productId));
+      wishlistRepository.removeItem(productId).catch(() => {});
       addToast(`Removed "${product ? product.name : 'Item'}" from wishlist.`);
     } else {
       setWishlist(prev => [...prev, productId]);
+      wishlistRepository.addItem(productId).catch(() => {});
       addToast(`Saved "${product ? product.name : 'Item'}" to wishlist.`);
     }
   };
@@ -373,6 +402,7 @@ export const StoreProvider = ({ children }: { children: React.ReactNode }) => {
     const found = await couponRepository.validateCoupon(cleanCode);
     if (found) {
       setAppliedCoupon(found);
+      cartRepository.applyCoupon(cleanCode).catch(() => {});
       addToast(`Coupon "${found.code}" applied: ${found.discountPercent}% off!`);
       return { success: true, message: `Coupon applied: ${found.discountPercent}% off` };
     } else {
@@ -383,6 +413,7 @@ export const StoreProvider = ({ children }: { children: React.ReactNode }) => {
 
   const removeCoupon = () => {
     setAppliedCoupon(null);
+    cartRepository.removeCoupon().catch(() => {});
     addToast('Coupon removed.');
   };
 
@@ -398,40 +429,45 @@ export const StoreProvider = ({ children }: { children: React.ReactNode }) => {
   const [orders, setOrders] = useState<Order[]>(MOCK_ORDERS as unknown as Order[]);
   const [latestOrder, setLatestOrder] = useState<Order | null>(null);
 
-  const placeOrder = (orderDetails: { shippingAddress: Address; paymentMethod?: string }) => {
-    const newOrderNumber = `#RRA${Math.floor(10000 + Math.random() * 90000)}`;
-    const newOrder: Order = {
-      id: newOrderNumber.replace('#', ''),
-      orderNumber: newOrderNumber,
-      date: new Date().toLocaleDateString('en-IN', { month: 'long', day: 'numeric', year: 'numeric' }),
-      status: 'Processing',
-      total: cartTotal,
-      items: cart.map(item => ({
-        id: item.productId,
-        productId: item.productId,
-        name: item.product.name,
-        color: item.color?.name,
-        colorName: item.color?.name,
-        price: item.price || item.product.price,
-        quantity: item.quantity,
-        image: item.color?.image || item.product.images[0]
-      })),
-      shippingAddress: orderDetails.shippingAddress,
-      paymentMethod: orderDetails.paymentMethod || 'UPI / Card (Mock)',
-      timeline: [
-        { step: 'Order Placed', time: 'Just now', completed: true },
-        { step: 'Payment Verified', time: 'Just now', completed: true },
-        { step: 'Dispatched from Hub', time: 'Pending', completed: false },
-        { step: 'Out for Delivery', time: 'Pending', completed: false },
-        { step: 'Delivered', time: 'Pending', completed: false }
-      ]
-    };
+  const placeOrder = async (orderDetails: { shippingAddress: Address; paymentMethod?: string }) => {
+    try {
+      const order = await orderRepository.placeOrder({
+        customerName: orderDetails.shippingAddress.fullName || user?.name || 'Valued Client',
+        customerEmail: user?.email || 'client@rora-luxury.com',
+        customerPhone: orderDetails.shippingAddress.phone || (user as unknown as { phone?: string })?.phone || '+91 98200 12345',
+        shippingAddress: orderDetails.shippingAddress,
+        billingAddress: orderDetails.shippingAddress,
+        paymentMethod: orderDetails.paymentMethod || 'UPI / Card (Mock)',
+        couponCode: appliedCoupon?.code,
+      });
 
-    setOrders(prev => [newOrder, ...prev]);
-    setLatestOrder(newOrder);
-    setCart([]);
-    setAppliedCoupon(null);
-    navigate('confirmation', { order: newOrder });
+      const finalOrder: Order = {
+        ...order,
+        items: order.items && order.items.length > 0 ? order.items : cart.map(item => ({
+          id: item.productId,
+          productId: item.productId,
+          name: item.product.name,
+          color: item.color?.name,
+          colorName: item.color?.name,
+          price: item.price || item.product.price,
+          quantity: item.quantity,
+          image: item.color?.image || item.product.images[0]
+        })),
+        total: order.total || cartTotal,
+        shippingAddress: orderDetails.shippingAddress,
+      };
+
+      setOrders(prev => [finalOrder, ...prev.filter(o => o.id !== finalOrder.id)]);
+      setLatestOrder(finalOrder);
+      setCart([]);
+      setAppliedCoupon(null);
+      cartRepository.clearCart().catch(() => {});
+      addToast(`Order ${finalOrder.orderNumber} placed successfully!`, 'success');
+      navigate('confirmation', { order: finalOrder });
+    } catch (e) {
+      console.error('placeOrder error:', e);
+      addToast('Failed to place order. Please try again.', 'error');
+    }
   };
 
   // Admin dynamic data

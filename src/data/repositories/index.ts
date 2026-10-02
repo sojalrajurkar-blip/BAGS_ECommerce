@@ -1,10 +1,14 @@
 export { productRepository } from './productRepository';
 export { categoryRepository } from './categoryRepository';
+export { cartRepository } from './cartRepository';
+export { wishlistRepository } from './wishlistRepository';
 export { orderRepository } from './orderRepository';
 export { reviewRepository } from './reviewRepository';
 export { couponRepository } from './couponRepository';
 export { contentRepository } from './contentRepository';
 export { adminRepository } from './adminRepository';
 export { authRepository } from './authRepository';
+export { addressRepository } from './addressRepository';
+export { returnRepository } from './returnRepository';
 export type { UserSummary, AuthResponseData } from './authRepository';
 export { apiClient, getSessionId, getAuthToken, setAuthToken } from '../apiClient';
