@@ -26,6 +26,8 @@ public interface ShipmentRepository extends JpaRepository<Shipment, String>, Jpa
 
     long countByStatus(ShipmentStatus status);
 
+    long countByStatusIn(List<ShipmentStatus> statuses);
+
     @Query("SELECT s FROM Shipment s WHERE " +
             "(:status IS NULL OR s.status = :status) AND (" +
             ":query IS NULL OR :query = '' OR " +
