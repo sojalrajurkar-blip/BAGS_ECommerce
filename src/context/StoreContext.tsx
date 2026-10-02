@@ -159,46 +159,48 @@ export const StoreProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   // Cart State (Persisted in localStorage)
-  const [cart, setCart] = useState<CartItem[]>(() => {
-    if (typeof window === 'undefined') return [];
+  const [cart, setCart] = useState<CartItem[]>([]);
+  // Wishlist State (Persisted)
+  const [wishlist, setWishlist] = useState<string[]>([]);
+  const [hasHydrated, setHasHydrated] = useState(false);
+
+  // Hydrate cart and wishlist from localStorage after initial client mount
+  useEffect(() => {
     try {
-      const saved = localStorage.getItem('rora_cart');
-      if (saved) return JSON.parse(saved);
+      const savedCart = localStorage.getItem('rora_cart');
+      if (savedCart) {
+        setCart(JSON.parse(savedCart));
+      }
+      const savedWishlist = localStorage.getItem('rora_wishlist');
+      if (savedWishlist) {
+        setWishlist(JSON.parse(savedWishlist));
+      }
     } catch (e) {
       console.error(e);
+    } finally {
+      setHasHydrated(true);
     }
-    return [];
-  });
+  }, []);
 
+  // Save cart to localStorage when changed (only after initial hydration)
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (!hasHydrated || typeof window === 'undefined') return;
     try {
       localStorage.setItem('rora_cart', JSON.stringify(cart));
     } catch (e) {
       console.error(e);
     }
-  }, [cart]);
+  }, [cart, hasHydrated]);
 
-  // Wishlist State (Persisted)
-  const [wishlist, setWishlist] = useState<string[]>(() => {
-    if (typeof window === 'undefined') return [];
-    try {
-      const saved = localStorage.getItem('rora_wishlist');
-      if (saved) return JSON.parse(saved);
-    } catch (e) {
-      console.error(e);
-    }
-    return [];
-  });
-
+  // Save wishlist to localStorage when changed (only after initial hydration)
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (!hasHydrated || typeof window === 'undefined') return;
     try {
       localStorage.setItem('rora_wishlist', JSON.stringify(wishlist));
     } catch (e) {
       console.error(e);
     }
-  }, [wishlist]);
+  }, [wishlist, hasHydrated]);
 
   // Demo state seeding helper
   const seedDemoData = () => {

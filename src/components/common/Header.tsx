@@ -16,6 +16,12 @@ export const Header: React.FC = () => {
     setIsMobileMenuOpen
   } = useStore();
 
+  const [mounted, setMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const isCurrent = (page: string) => currentRoute.page === page;
 
   return (
@@ -88,7 +94,7 @@ export const Header: React.FC = () => {
               aria-label="Wishlist"
             >
               <Heart size={20} strokeWidth={1.8} />
-              {wishlist.length > 0 && (
+              {mounted && wishlist.length > 0 && (
                 <span className="action-badge">{wishlist.length}</span>
               )}
             </button>
@@ -99,7 +105,7 @@ export const Header: React.FC = () => {
               aria-label="Shopping Cart"
             >
               <ShoppingBag size={20} strokeWidth={1.8} />
-              {cartItemCount > 0 && (
+              {mounted && cartItemCount > 0 && (
                 <span className="action-badge">{cartItemCount}</span>
               )}
             </button>
