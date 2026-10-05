@@ -67,3 +67,7 @@ rora:
   jwt:
     secret: ${JWT_SECRET:404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}
     expiration-ms: ${JWT_EXPIRATION_MS:86400000} # 24 hours
+  razorpay:
+    key-id: ${RAZORPAY_KEY_ID:rzp_test_TkFa9wOUkFRBDH}
+    key-secret: ${RAZORPAY_KEY_SECRET:gJlmuC6OqY5Bv9c2q3Muc7zN}
+

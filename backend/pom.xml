@@ -100,6 +100,13 @@
             <version>${springdoc.version}</version>
         </dependency>
 
+        <!-- Razorpay Java SDK -->
+        <dependency>
+            <groupId>com.razorpay</groupId>
+            <artifactId>razorpay-java</artifactId>
+            <version>1.4.8</version>
+        </dependency>
+
         <!-- Lombok for clean boilerplate reduction -->
         <dependency>
             <groupId>org.projectlombok</groupId>

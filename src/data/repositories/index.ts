@@ -10,5 +10,6 @@ export { adminRepository } from './adminRepository';
 export { authRepository } from './authRepository';
 export { addressRepository } from './addressRepository';
 export { returnRepository } from './returnRepository';
+export { paymentRepository } from './paymentRepository';
 export type { UserSummary, AuthResponseData } from './authRepository';
 export { apiClient, getSessionId, getAuthToken, setAuthToken } from '../apiClient';

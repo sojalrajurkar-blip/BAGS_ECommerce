@@ -24,6 +24,23 @@ import org.springframework.web.bind.annotation.*;
 public class PaymentController {
 
     private final PaymentService paymentService;
+    private final com.rora.backend.payment.service.RazorpayService razorpayService;
+
+    @PostMapping("/razorpay/create-order/{orderIdOrNumber}")
+    @Operation(summary = "Create a Razorpay Order for online checkout")
+    public ResponseEntity<ApiResponse<com.rora.backend.payment.dto.RazorpayOrderResponse>> createRazorpayOrder(
+            @PathVariable String orderIdOrNumber) {
+        com.rora.backend.payment.dto.RazorpayOrderResponse response = razorpayService.createOrder(orderIdOrNumber);
+        return ResponseEntity.ok(ApiResponse.success("Razorpay order created successfully", response));
+    }
+
+    @PostMapping("/razorpay/verify")
+    @Operation(summary = "Verify cryptographic signature of Razorpay payment and capture order")
+    public ResponseEntity<ApiResponse<PaymentDto>> verifyRazorpayPayment(
+            @Valid @RequestBody com.rora.backend.payment.dto.RazorpayVerifyRequest request) {
+        PaymentDto payment = razorpayService.verifyPayment(request);
+        return ResponseEntity.ok(ApiResponse.success("Razorpay payment verified and captured successfully", payment));
+    }
 
     @PostMapping("/initiate")
     @Operation(summary = "Initiate a payment transaction for an order")

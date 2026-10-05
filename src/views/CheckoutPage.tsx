@@ -4,7 +4,8 @@ import React, { useState, useRef } from 'react';
 import { useStore } from '../context/StoreContext';
 import { Breadcrumbs } from '../components/common/Breadcrumbs';
 import { useGsapContext, revealPageHeader, fadeInUp } from '../animations';
-import { Check, ShieldCheck, Truck, CreditCard, Lock, ArrowRight, ArrowLeft } from 'lucide-react';
+import { Check, ShieldCheck, Truck, CreditCard, Lock, ArrowRight, ArrowLeft, Loader2, Sparkles } from 'lucide-react';
+import { paymentRepository, orderRepository } from '../data/repositories';
 
 interface CheckoutFormData {
   firstName: string;
@@ -17,7 +18,7 @@ interface CheckoutFormData {
   zipCode: string;
   country: string;
   shippingMethod: 'standard' | 'express';
-  paymentMethod: 'upi' | 'card' | 'netbanking' | 'applepay' | 'paypal';
+  paymentMethod: 'razorpay' | 'upi' | 'card' | 'netbanking' | 'applepay' | 'paypal';
   cardNumber: string;
   cardExpiry: string;
   cardCvc: string;
@@ -30,11 +31,14 @@ export const CheckoutPage: React.FC = () => {
     cartSubtotal,
     discountAmount,
     cartTotal,
+    appliedCoupon,
+    addToast,
     placeOrder,
     navigate,
   } = useStore();
 
   const [step, setStep] = useState<number>(1); // 1: Shipping, 2: Payment
+  const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const pageRef = useRef<HTMLDivElement>(null);
 
   // Form State
@@ -49,7 +53,7 @@ export const CheckoutPage: React.FC = () => {
     zipCode: '400050',
     country: 'India',
     shippingMethod: 'standard',
-    paymentMethod: 'upi',
+    paymentMethod: 'razorpay',
     cardNumber: '4242 •••• •••• 4242',
     cardExpiry: '08/28',
     cardCvc: '888',
@@ -85,26 +89,130 @@ export const CheckoutPage: React.FC = () => {
     }
   };
 
-  const handleCompleteOrder = (e: React.FormEvent) => {
-    e.preventDefault();
-    placeOrder({
-      shippingAddress: {
-        fullName: `${formData.firstName} ${formData.lastName}`,
-        street: formData.address,
-        city: formData.city,
-        state: formData.state,
-        postalCode: formData.zipCode,
-        country: formData.country,
-      },
-      paymentMethod:
-        formData.paymentMethod === 'applepay'
-          ? 'Apple Pay'
-          : formData.paymentMethod === 'paypal'
-          ? 'PayPal'
-          : formData.paymentMethod === 'upi'
-          ? 'UPI (sarah@okaxis)'
-          : `Visa ending in 4242`,
+  const loadRazorpayScript = (): Promise<boolean> => {
+    return new Promise((resolve) => {
+      if (typeof window === 'undefined') return resolve(false);
+      if ((window as unknown as { Razorpay?: unknown }).Razorpay) return resolve(true);
+
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
     });
+  };
+
+  const handleCompleteOrder = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (isProcessing) return;
+
+    const shippingAddress = {
+      fullName: `${formData.firstName} ${formData.lastName}`,
+      street: formData.address,
+      city: formData.city,
+      state: formData.state,
+      postalCode: formData.zipCode,
+      country: formData.country,
+      phone: formData.phone,
+    };
+
+    if (formData.paymentMethod !== 'razorpay') {
+      // Instant Sandbox / Mock fallback
+      placeOrder({
+        shippingAddress,
+        paymentMethod:
+          formData.paymentMethod === 'applepay'
+            ? 'Apple Pay'
+            : formData.paymentMethod === 'paypal'
+            ? 'PayPal'
+            : formData.paymentMethod === 'upi'
+            ? 'UPI (sarah@okaxis)'
+            : `Visa ending in 4242`,
+      });
+      return;
+    }
+
+    // Live Razorpay Gateway
+    try {
+      setIsProcessing(true);
+      addToast('Initializing secure Razorpay gateway...', 'info');
+
+      const loaded = await loadRazorpayScript();
+      if (!loaded) {
+        addToast('Unable to load Razorpay checkout script. Please check your network.', 'error');
+        setIsProcessing(false);
+        return;
+      }
+
+      // 1. Authoritative order placement on backend
+      const order = await orderRepository.placeOrder({
+        customerName: shippingAddress.fullName,
+        customerEmail: formData.email,
+        customerPhone: formData.phone,
+        shippingAddress,
+        billingAddress: shippingAddress,
+        paymentMethod: 'RAZORPAY',
+        couponCode: appliedCoupon?.code,
+      });
+
+      // 2. Create Razorpay order on backend
+      const rzpOrder = await paymentRepository.createRazorpayOrder(order.id);
+
+      // 3. Launch Razorpay modal with RÓRA Luxury Atelier theme
+      const options = {
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || rzpOrder.keyId || 'rzp_test_TkFa9wOUkFRBDH',
+        amount: rzpOrder.amountInPaise,
+        currency: 'INR',
+        name: 'RÓRA Atelier',
+        description: `Order #${order.orderNumber} Luxury Leather Acquisition`,
+        image: 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=200&q=80',
+        order_id: rzpOrder.razorpayOrderId,
+        prefill: {
+          name: `${formData.firstName} ${formData.lastName}`,
+          email: formData.email,
+          contact: formData.phone,
+        },
+        notes: {
+          orderNumber: order.orderNumber,
+          atelierBrand: 'RÓRA Leather Goods',
+        },
+        theme: {
+          color: '#161616',
+        },
+        handler: async function (response: { razorpay_order_id: string; razorpay_payment_id: string; razorpay_signature: string }) {
+          try {
+            await paymentRepository.verifyRazorpayPayment({
+              orderIdOrNumber: order.id,
+              razorpayOrderId: response.razorpay_order_id,
+              razorpayPaymentId: response.razorpay_payment_id,
+              razorpaySignature: response.razorpay_signature,
+            });
+
+            addToast(`Payment of ₹${cartTotal.toLocaleString('en-IN')} captured & verified!`, 'success');
+            navigate('confirmation', { order });
+          } catch (verifyErr) {
+            console.error('Signature verification error:', verifyErr);
+            addToast('Payment capture verification failed. Please contact concierge.', 'error');
+          } finally {
+            setIsProcessing(false);
+          }
+        },
+        modal: {
+          ondismiss: function () {
+            setIsProcessing(false);
+            addToast('Payment window closed.', 'info');
+          }
+        }
+      };
+
+      const RazorpayConstructor = (window as unknown as { Razorpay: new (opts: unknown) => { open: () => void } }).Razorpay;
+      const rzpInstance = new RazorpayConstructor(options);
+      rzpInstance.open();
+    } catch (err) {
+      console.error('Razorpay Checkout failed:', err);
+      addToast('Could not initialize Razorpay payment. Please try again.', 'error');
+      setIsProcessing(false);
+    }
   };
 
   useGsapContext(
@@ -347,34 +455,47 @@ export const CheckoutPage: React.FC = () => {
 
               {/* Payment Method */}
               <div className="form-section-card">
-                <h3 className="form-section-title font-serif">Payment Method</h3>
-                <p className="payment-prototype-note">
-                  Prototype Sandbox: No real bank deduction will be made.
-                </p>
+                <div className="flex items-center justify-between mb-16">
+                  <h3 className="form-section-title font-serif">Payment Method</h3>
+                  <span className="badge badge-accent flex items-center gap-4 text-xs">
+                    <ShieldCheck size={12} /> 256-Bit Encrypted
+                  </span>
+                </div>
 
                 <div className="payment-method-tabs">
+                  <button
+                    type="button"
+                    className={`payment-tab ${formData.paymentMethod === 'razorpay' ? 'tab-selected' : ''}`}
+                    onClick={() => handleChange('paymentMethod', 'razorpay')}
+                  >
+                    <Sparkles size={16} className="text-amber-500" /> Razorpay Gateway (UPI, Cards, EMI, NetBanking)
+                  </button>
                   <button
                     type="button"
                     className={`payment-tab ${formData.paymentMethod === 'upi' ? 'tab-selected' : ''}`}
                     onClick={() => handleChange('paymentMethod', 'upi')}
                   >
-                    UPI (GPay / PhonePe / Paytm)
+                    Direct UPI Sandbox
                   </button>
                   <button
                     type="button"
                     className={`payment-tab ${formData.paymentMethod === 'card' ? 'tab-selected' : ''}`}
                     onClick={() => handleChange('paymentMethod', 'card')}
                   >
-                    <CreditCard size={18} /> Credit / Debit Card
-                  </button>
-                  <button
-                    type="button"
-                    className={`payment-tab ${formData.paymentMethod === 'netbanking' ? 'tab-selected' : ''}`}
-                    onClick={() => handleChange('paymentMethod', 'netbanking')}
-                  >
-                    NetBanking
+                    <CreditCard size={18} /> Card Sandbox
                   </button>
                 </div>
+
+                {formData.paymentMethod === 'razorpay' && (
+                  <div className="card-input-box p-16 rounded-md bg-stone-900/40 border border-stone-800 text-sm text-stone-300">
+                    <p className="font-medium text-stone-200 mb-6 flex items-center gap-6">
+                      <Lock size={14} className="text-emerald-400" /> Official Razorpay Modal Gateway
+                    </p>
+                    <p className="text-xs text-stone-400 leading-relaxed">
+                      Upon clicking below, the encrypted Razorpay Checkout window will open allowing real-time payment via Google Pay, PhonePe, Paytm, RuPay, Visa, Mastercard, NetBanking, and No-Cost EMI options.
+                    </p>
+                  </div>
+                )}
 
                 {formData.paymentMethod === 'card' && (
                   <div className="card-input-box">
@@ -411,6 +532,7 @@ export const CheckoutPage: React.FC = () => {
                     </div>
                   </div>
                 )}
+
                 {formData.paymentMethod === 'upi' && (
                   <div className="card-input-box">
                     <div className="form-group">
@@ -431,11 +553,24 @@ export const CheckoutPage: React.FC = () => {
                   type="button"
                   className="btn btn-secondary"
                   onClick={() => setStep(1)}
+                  disabled={isProcessing}
                 >
                   <ArrowLeft size={16} /> Back to Shipping
                 </button>
-                <button type="submit" className="btn btn-primary btn-lg place-order-btn">
-                  <Lock size={16} /> Place Order — ₹{cartTotal.toLocaleString('en-IN')}
+                <button
+                  type="submit"
+                  className="btn btn-primary btn-lg place-order-btn"
+                  disabled={isProcessing}
+                >
+                  {isProcessing ? (
+                    <span className="flex items-center gap-8">
+                      <Loader2 size={16} className="animate-spin" /> Launching Razorpay...
+                    </span>
+                  ) : (
+                    <>
+                      <Lock size={16} /> Complete Acquisition — ₹{cartTotal.toLocaleString('en-IN')}
+                    </>
+                  )}
                 </button>
               </div>
             </form>
