@@ -70,4 +70,6 @@ rora:
   razorpay:
     key-id: ${RAZORPAY_KEY_ID:rzp_test_TkFa9wOUkFRBDH}
     key-secret: ${RAZORPAY_KEY_SECRET:gJlmuC6OqY5Bv9c2q3Muc7zN}
+  google:
+    client-id: ${GOOGLE_CLIENT_ID:647579746380-rsd8nvl7o86octd3ioscc4a5kbhvc5cn.apps.googleusercontent.com}
 

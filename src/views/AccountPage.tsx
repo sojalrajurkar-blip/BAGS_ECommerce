@@ -3,6 +3,7 @@
 import React, { useState, useRef } from 'react';
 import { useStore } from '../context/StoreContext';
 import { Breadcrumbs } from '../components/common/Breadcrumbs';
+import { GoogleAuthButton } from '../components/auth/GoogleAuthButton';
 import { useGsapContext, revealPageHeader, fadeInUp } from '../animations';
 import {
   User,
@@ -211,6 +212,14 @@ export const AccountPage: React.FC = () => {
                 >
                   Create Client Profile
                 </button>
+              </div>
+
+              {/* Google OAuth 2.0 Single Sign-On */}
+              <div className="luxury-auth-sso-section">
+                <GoogleAuthButton />
+                <div className="luxury-auth-divider">
+                  <span>Or continue with email</span>
+                </div>
               </div>
 
               {/* Sign In Form */}

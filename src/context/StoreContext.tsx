@@ -255,6 +255,19 @@ export const StoreProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  const loginWithGoogle = async (idToken: string): Promise<boolean> => {
+    try {
+      const res = await authRepository.loginWithGoogle(idToken);
+      setUser(res.user);
+      addToast(`Welcome to RÓRA Atelier, ${res.user.name}.`, 'success');
+      return true;
+    } catch (e) {
+      console.error(e);
+      addToast('Google authentication failed. Please try again.', 'error');
+      return false;
+    }
+  };
+
   const register = async (name: string, email: string, password: string, phone?: string): Promise<boolean> => {
     try {
       const res = await authRepository.register({ name, email, password, phone });
@@ -531,6 +544,7 @@ export const StoreProvider = ({ children }: { children: React.ReactNode }) => {
         user,
         isAuthenticated: Boolean(user),
         login,
+        loginWithGoogle,
         register,
         logout
       }}

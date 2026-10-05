@@ -139,6 +139,43 @@ export class AuthRepository {
   }
 
   /**
+   * Authenticates user using Google OAuth 2.0 ID Token.
+   */
+  async loginWithGoogle(idToken: string): Promise<AuthResponseData> {
+    if (USE_MOCK) {
+      const mockGoogleUser: AuthResponseData = {
+        token: `mock-jwt-google-${Date.now()}`,
+        tokenType: 'Bearer',
+        expiresInMs: 86400000,
+        user: {
+          id: `cust-google-${Date.now()}`,
+          name: 'Google Client User',
+          email: 'client.google@rora-luxury.com',
+          status: 'ACTIVE',
+          roles: ['ROLE_CUSTOMER'],
+          permissions: [],
+        },
+      };
+      setAuthToken(mockGoogleUser.token);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('rora_user_profile', JSON.stringify(mockGoogleUser.user));
+      }
+      return mockGoogleUser;
+    }
+
+    const response = await apiClient.post<AuthResponseData>('/auth/google', { idToken }, {
+      skipAuth: true,
+    });
+    if (response && response.token) {
+      setAuthToken(response.token);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('rora_user_profile', JSON.stringify(response.user));
+      }
+    }
+    return response;
+  }
+
+  /**
    * Fetches current authenticated user profile using active JWT.
    */
   async getCurrentUser(): Promise<UserSummary | null> {

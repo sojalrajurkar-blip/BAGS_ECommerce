@@ -449,6 +449,7 @@ export interface StoreContextType {
   } | null;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<boolean>;
+  loginWithGoogle: (idToken: string) => Promise<boolean>;
   register: (name: string, email: string, password: string, phone?: string) => Promise<boolean>;
   logout: () => void;
 }

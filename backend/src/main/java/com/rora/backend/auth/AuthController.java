@@ -42,6 +42,13 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponse.success("Login successful", response));
     }
 
+    @PostMapping("/google")
+    @Operation(summary = "Authenticate with Google OAuth 2.0 ID Token", description = "Cryptographically verifies Google ID token, provisions or retrieves customer account, and returns signed RÓRA JWT Bearer token.")
+    public ResponseEntity<ApiResponse<AuthResponse>> loginWithGoogle(@Valid @RequestBody com.rora.backend.auth.dto.GoogleAuthRequest request) {
+        AuthResponse response = authService.loginWithGoogle(request);
+        return ResponseEntity.ok(ApiResponse.success("Google authentication successful", response));
+    }
+
     @GetMapping("/me")
     @SecurityRequirement(name = "BearerAuth")
     @Operation(summary = "Get current authenticated user profile", description = "Returns active user information and assigned RBAC permissions based on Bearer token.")

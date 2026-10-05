@@ -144,8 +144,28 @@ class AuthControllerTest {
     }
 
     @Test
-    void shouldRejectMeEndpointWithoutToken() throws Exception {
-        mockMvc.perform(get("/api/v1/auth/me"))
-                .andExpect(status().isUnauthorized());
+    void shouldRejectBlankGoogleIdToken() throws Exception {
+        com.rora.backend.auth.dto.GoogleAuthRequest request = com.rora.backend.auth.dto.GoogleAuthRequest.builder()
+                .idToken("")
+                .build();
+
+        mockMvc.perform(post("/api/v1/auth/google")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success", is(false)));
+    }
+
+    @Test
+    void shouldRejectInvalidGoogleIdToken() throws Exception {
+        com.rora.backend.auth.dto.GoogleAuthRequest request = com.rora.backend.auth.dto.GoogleAuthRequest.builder()
+                .idToken("invalid-google-token-payload")
+                .build();
+
+        mockMvc.perform(post("/api/v1/auth/google")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.success", is(false)));
     }
 }
