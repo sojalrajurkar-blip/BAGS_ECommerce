@@ -41,72 +41,66 @@ function mapBackendReview(r: BackendReviewDto): Review {
   };
 }
 
+const USE_MOCK = process.env.NEXT_PUBLIC_USE_MOCK_DATA === 'true';
+
 export const reviewRepository = {
   async getAllReviews(): Promise<Review[]> {
-    try {
-      const data = await apiClient.get<BackendReviewDto[] | { content: BackendReviewDto[] }>('/reviews/featured');
-      const list = Array.isArray(data) ? data : (data?.content || []);
-      if (list.length > 0) {
-        return list.map(mapBackendReview);
-      }
-    } catch (err) {
-      console.warn('Backend reviews API unavailable, fallback to local reviews:', err);
+    if (USE_MOCK) {
+      return Promise.resolve([...(REVIEWS as unknown as Review[])]);
     }
-    return Promise.resolve([...(REVIEWS as unknown as Review[])]);
+
+    const data = await apiClient.get<BackendReviewDto[] | { content: BackendReviewDto[] }>('/reviews/featured');
+    const list = Array.isArray(data) ? data : (data?.content || []);
+    return list.map(mapBackendReview);
   },
 
   async getReviewsForProduct(productNameOrId: string): Promise<Review[]> {
     if (!productNameOrId) return this.getAllReviews();
 
-    try {
-      const data = await apiClient.get<BackendReviewDto[] | { content: BackendReviewDto[] }>(`/reviews/product/${productNameOrId}`);
-      const list = Array.isArray(data) ? data : (data?.content || []);
-      if (list.length > 0) {
-        return list.map(mapBackendReview);
-      }
-    } catch {
-      // Fallback to searching local list
+    if (USE_MOCK) {
+      const reviewsList = REVIEWS as unknown as Review[];
+      const filtered = reviewsList.filter(r =>
+        (r.productName && r.productName.toLowerCase() === productNameOrId.toLowerCase()) ||
+        (r.productId && r.productId === productNameOrId)
+      );
+      return Promise.resolve(filtered.length > 0 ? filtered : [...reviewsList]);
     }
 
-    const reviewsList = REVIEWS as unknown as Review[];
-    const filtered = reviewsList.filter(r =>
-      (r.productName && r.productName.toLowerCase() === productNameOrId.toLowerCase()) ||
-      (r.productId && r.productId === productNameOrId)
-    );
-    return Promise.resolve(filtered.length > 0 ? filtered : [...reviewsList]);
+    const data = await apiClient.get<BackendReviewDto[] | { content: BackendReviewDto[] }>(`/reviews/product/${productNameOrId}`);
+    const list = Array.isArray(data) ? data : (data?.content || []);
+    return list.map(mapBackendReview);
   },
 
   async submitReview(reviewPayload: Partial<Review>): Promise<Review> {
-    try {
-      const payload = {
-        productId: reviewPayload.productId,
+    if (USE_MOCK) {
+      return Promise.resolve({
+        id: `rev-${Date.now()}`,
+        author: reviewPayload.author || 'Anonymous Patron',
+        role: 'Verified Patron',
         rating: reviewPayload.rating || 5,
-        title: reviewPayload.title || 'Exceptional Craftsmanship',
-        content: reviewPayload.comment || reviewPayload.content || '',
-        reviewerName: reviewPayload.author || 'Anonymous Patron',
-        reviewerEmail: 'patron@rora-luxury.com'
-      };
-
-      const res = await apiClient.post<BackendReviewDto>('/reviews', payload);
-      if (res && res.id) {
-        return mapBackendReview(res);
-      }
-    } catch (err) {
-      console.warn('Backend submit review API error, creating simulated review:', err);
+        title: reviewPayload.title,
+        comment: reviewPayload.comment || reviewPayload.content,
+        content: reviewPayload.content || reviewPayload.comment,
+        date: 'Just now',
+        verified: true,
+        verifiedPurchase: true,
+        helpfulCount: 0
+      });
     }
 
-    return Promise.resolve({
-      id: `rev-${Date.now()}`,
-      author: reviewPayload.author || 'Anonymous Patron',
-      role: 'Verified Patron',
+    const payload = {
+      productId: reviewPayload.productId,
       rating: reviewPayload.rating || 5,
-      title: reviewPayload.title,
-      comment: reviewPayload.comment || reviewPayload.content,
-      content: reviewPayload.content || reviewPayload.comment,
-      date: 'Just now',
-      verified: true,
-      verifiedPurchase: true,
-      helpfulCount: 0
-    });
+      title: reviewPayload.title || 'Exceptional Craftsmanship',
+      content: reviewPayload.comment || reviewPayload.content || '',
+      reviewerName: reviewPayload.author || 'Anonymous Patron',
+      reviewerEmail: 'patron@rora-luxury.com'
+    };
+
+    const res = await apiClient.post<BackendReviewDto>('/reviews', payload);
+    if (!res || !res.id) {
+      throw new Error('Failed to submit review: Invalid backend response');
+    }
+    return mapBackendReview(res);
   }
 };

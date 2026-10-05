@@ -42,135 +42,133 @@ export const productRepository = {
       return this.getLocalFilteredProducts(filters);
     }
 
-    try {
-      const params: Record<string, string | number | boolean | undefined> = {};
-      if (filters.category && filters.category !== 'all') params.category = filters.category;
-      if (filters.minPrice !== undefined) params.minPrice = filters.minPrice;
-      if (filters.maxPrice !== undefined) params.maxPrice = filters.maxPrice;
-      if (filters.material && filters.material !== 'all') params.material = filters.material;
-      if (filters.color && filters.color !== 'all') params.color = filters.color;
-      if (filters.search) params.search = filters.search;
-      if (filters.sortBy) params.sortBy = filters.sortBy;
-      if (filters.limit) params.limit = filters.limit;
-      if (filters.page) params.page = filters.page;
+    const params: Record<string, string | number | boolean | undefined> = {};
+    if (filters.category && filters.category !== 'all') params.category = filters.category;
+    if (filters.minPrice !== undefined) params.minPrice = filters.minPrice;
+    if (filters.maxPrice !== undefined) params.maxPrice = filters.maxPrice;
+    if (filters.material && filters.material !== 'all') params.material = filters.material;
+    if (filters.color && filters.color !== 'all') params.color = filters.color;
+    if (filters.search) params.search = filters.search;
+    if (filters.sortBy) params.sortBy = filters.sortBy;
+    if (filters.limit) params.limit = filters.limit;
+    if (filters.page) params.page = filters.page;
 
-      const res = await apiClient.get<BackendPagedProductResponse | Product[]>('/products', { params });
-      
-      let productsList: Product[] = [];
-      if (Array.isArray(res)) {
-        productsList = res;
-      } else if (res && Array.isArray(res.content)) {
-        productsList = res.content;
-      }
-
-      if (productsList.length > 0) {
-        return productsList;
-      }
-    } catch (err) {
-      console.warn('Backend products query failed, using seeded catalog:', err);
+    const res = await apiClient.get<BackendPagedProductResponse | Product[]>('/products', { params });
+    
+    let productsList: Product[] = [];
+    if (Array.isArray(res)) {
+      productsList = res;
+    } else if (res && Array.isArray(res.content)) {
+      productsList = res.content;
     }
 
-    return this.getLocalFilteredProducts(filters);
+    return productsList;
   },
 
   /**
    * Retrieves single product by its database ID or slug.
    */
   async getProductById(id: string): Promise<Product | null> {
-    if (!USE_MOCK) {
-      try {
-        const data = await apiClient.get<Product>(`/products/${id}`);
-        if (data && data.id) {
-          return data;
-        }
-      } catch (err) {
-        console.warn(`Backend product fetch for "${id}" failed:`, err);
-      }
+    if (USE_MOCK) {
+      const product = (PRODUCTS as unknown as Product[]).find(p => p.id === id || p.slug === id);
+      return product || null;
     }
-    const product = (PRODUCTS as unknown as Product[]).find(p => p.id === id || p.slug === id);
-    return product || null;
+
+    try {
+      const data = await apiClient.get<Product>(`/products/${id}`);
+      if (data && data.id) {
+        return data;
+      }
+      return null;
+    } catch (err: unknown) {
+      const status = (err as { status?: number })?.status;
+      if (status === 404) {
+        return null;
+      }
+      throw err;
+    }
   },
 
   /**
    * Retrieves single product by its URL slug.
    */
   async getProductBySlug(slug: string): Promise<Product | null> {
-    if (!USE_MOCK) {
-      try {
-        const data = await apiClient.get<Product>(`/products/${slug}`);
-        if (data && (data.slug || data.id)) {
-          return data;
-        }
-      } catch (err) {
-        console.warn(`Backend product fetch for slug "${slug}" failed:`, err);
-      }
+    if (USE_MOCK) {
+      const product = (PRODUCTS as unknown as Product[]).find(p => p.slug === slug || p.id === slug);
+      return product || null;
     }
-    const product = (PRODUCTS as unknown as Product[]).find(p => p.slug === slug || p.id === slug);
-    return product || null;
+
+    try {
+      const data = await apiClient.get<Product>(`/products/${slug}`);
+      if (data && (data.slug || data.id)) {
+        return data;
+      }
+      return null;
+    } catch (err: unknown) {
+      const status = (err as { status?: number })?.status;
+      if (status === 404) {
+        return null;
+      }
+      throw err;
+    }
   },
 
   /**
    * Retrieves featured flagship products.
    */
   async getFeaturedProducts(limit = 4): Promise<Product[]> {
-    if (!USE_MOCK) {
-      try {
-        const data = await apiClient.get<Product[]>('/products/featured');
-        if (Array.isArray(data) && data.length > 0) {
-          return data.slice(0, limit);
-        }
-      } catch {
-        // Fallback to seeded items if endpoint not populated
-      }
+    if (USE_MOCK) {
+      return (PRODUCTS as unknown as Product[]).slice(0, limit);
     }
-    return (PRODUCTS as unknown as Product[]).slice(0, limit);
+
+    const data = await apiClient.get<Product[]>('/products/featured');
+    if (Array.isArray(data)) {
+      return data.slice(0, limit);
+    }
+    return [];
   },
 
   /**
    * Retrieves best-selling artisanal carry items.
    */
   async getBestSellers(limit = 4): Promise<Product[]> {
-    if (!USE_MOCK) {
-      try {
-        const data = await apiClient.get<Product[]>('/products/best-sellers');
-        if (Array.isArray(data) && data.length > 0) {
-          return data.slice(0, limit);
-        }
-      } catch {
-        // Fallback
-      }
+    if (USE_MOCK) {
+      const bestSellers = (PRODUCTS as unknown as Product[]).filter(
+        p => p.badge === 'Best Seller' || p.badge === 'Popular' || p.badge === 'Staff Pick'
+      ).slice(0, limit);
+      return bestSellers.length > 0 ? bestSellers : (PRODUCTS as unknown as Product[]).slice(0, limit);
     }
-    const bestSellers = (PRODUCTS as unknown as Product[]).filter(
-      p => p.badge === 'Best Seller' || p.badge === 'Popular' || p.badge === 'Staff Pick'
-    ).slice(0, limit);
-    return bestSellers.length > 0 ? bestSellers : (PRODUCTS as unknown as Product[]).slice(0, limit);
+
+    const data = await apiClient.get<Product[]>('/products/best-sellers');
+    if (Array.isArray(data)) {
+      return data.slice(0, limit);
+    }
+    return [];
   },
 
   /**
    * Retrieves related products for cross-sell recommendations.
    */
   async getRelatedProducts(productId: string, limit = 4): Promise<Product[]> {
-    if (!USE_MOCK) {
-      try {
-        const data = await apiClient.get<Product[]>(`/products/${productId}/related`);
-        if (Array.isArray(data) && data.length > 0) {
-          return data.slice(0, limit);
-        }
-      } catch {
-        // Fallback
+    if (USE_MOCK) {
+      const all = PRODUCTS as unknown as Product[];
+      const current = all.find(p => p.id === productId || p.slug === productId);
+      let related = all.filter(p => p.id !== productId && p.slug !== productId);
+
+      if (current) {
+        const sameCategory = related.filter(p => p.category === current.category);
+        const otherCategory = related.filter(p => p.category !== current.category);
+        related = [...sameCategory, ...otherCategory];
       }
-    }
-    const all = PRODUCTS as unknown as Product[];
-    const current = all.find(p => p.id === productId || p.slug === productId);
-    let related = all.filter(p => p.id !== productId && p.slug !== productId);
 
-    if (current) {
-      const sameCategory = related.filter(p => p.category === current.category);
-      const otherCategory = related.filter(p => p.category !== current.category);
-      related = [...sameCategory, ...otherCategory];
+      return related.slice(0, limit);
     }
 
-    return related.slice(0, limit);
+    const data = await apiClient.get<Product[]>(`/products/${productId}/related`);
+    if (Array.isArray(data)) {
+      return data.slice(0, limit);
+    }
+    return [];
   },
 
   /**
@@ -181,25 +179,22 @@ export const productRepository = {
       return [];
     }
 
-    if (!USE_MOCK) {
-      try {
-        const data = await apiClient.get<Product[]>('/products/search', { params: { q: query.trim() } });
-        if (Array.isArray(data)) {
-          return data;
-        }
-      } catch (err) {
-        console.warn('Backend search query failed:', err);
-      }
+    if (USE_MOCK) {
+      const q = query.toLowerCase().trim();
+      return (PRODUCTS as unknown as Product[]).filter(p =>
+        p.name.toLowerCase().includes(q) ||
+        p.description.toLowerCase().includes(q) ||
+        p.category.toLowerCase().includes(q) ||
+        (p.material && p.material.toLowerCase().includes(q)) ||
+        (p.tagline && p.tagline.toLowerCase().includes(q))
+      );
     }
 
-    const q = query.toLowerCase().trim();
-    return (PRODUCTS as unknown as Product[]).filter(p =>
-      p.name.toLowerCase().includes(q) ||
-      p.description.toLowerCase().includes(q) ||
-      p.category.toLowerCase().includes(q) ||
-      (p.material && p.material.toLowerCase().includes(q)) ||
-      (p.tagline && p.tagline.toLowerCase().includes(q))
-    );
+    const data = await apiClient.get<Product[]>('/products/search', { params: { q: query.trim() } });
+    if (Array.isArray(data)) {
+      return data;
+    }
+    return [];
   },
 
   /**

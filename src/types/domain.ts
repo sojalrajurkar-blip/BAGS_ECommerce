@@ -63,8 +63,7 @@ export interface ProductSpecification {
   handleDrop?: string;
   weight?: string;
   origin?: string;
-  Origin?: string;
-  Warranty?: string;
+  warranty?: string;
   [key: string]: string | undefined;
 }
 
@@ -90,7 +89,6 @@ export interface Product {
   isBestSeller?: boolean;
   isCurated?: boolean;
   isFeatured?: boolean;
-  featured?: boolean;
   images: string[];
   description: string;
   story?: string;

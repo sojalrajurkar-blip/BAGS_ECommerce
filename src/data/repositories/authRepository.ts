@@ -37,25 +37,14 @@ export interface RegisterPayload {
   phone?: string;
 }
 
+const USE_MOCK = process.env.NEXT_PUBLIC_USE_MOCK_DATA === 'true';
+
 export class AuthRepository {
   /**
    * Authenticates user credentials against the backend.
    */
   async login(payload: LoginPayload): Promise<AuthResponseData> {
-    try {
-      const response = await apiClient.post<AuthResponseData>('/auth/login', payload, {
-        skipAuth: true,
-      });
-      if (response && response.token) {
-        setAuthToken(response.token);
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('rora_user_profile', JSON.stringify(response.user));
-        }
-      }
-      return response;
-    } catch (error) {
-      console.warn('Backend login request failed, checking fallback credentials:', error);
-      // Fallback for offline demo mode
+    if (USE_MOCK) {
       if (payload.email === 'admin@rora-luxury.com' && payload.password === 'Password123!') {
         const mockAdmin: AuthResponseData = {
           token: 'mock-jwt-admin-token',
@@ -97,28 +86,26 @@ export class AuthRepository {
         }
         return mockCustomer;
       }
-
-      throw error;
+      throw new Error('Invalid mock credentials');
     }
+
+    const response = await apiClient.post<AuthResponseData>('/auth/login', payload, {
+      skipAuth: true,
+    });
+    if (response && response.token) {
+      setAuthToken(response.token);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('rora_user_profile', JSON.stringify(response.user));
+      }
+    }
+    return response;
   }
 
   /**
    * Registers a new customer account.
    */
   async register(payload: RegisterPayload): Promise<AuthResponseData> {
-    try {
-      const response = await apiClient.post<AuthResponseData>('/auth/register', payload, {
-        skipAuth: true,
-      });
-      if (response && response.token) {
-        setAuthToken(response.token);
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('rora_user_profile', JSON.stringify(response.user));
-        }
-      }
-      return response;
-    } catch (error) {
-      console.warn('Backend register failed, creating fallback customer session:', error);
+    if (USE_MOCK) {
       const fallbackUser: AuthResponseData = {
         token: `mock-jwt-reg-${Date.now()}`,
         tokenType: 'Bearer',
@@ -138,6 +125,17 @@ export class AuthRepository {
       }
       return fallbackUser;
     }
+
+    const response = await apiClient.post<AuthResponseData>('/auth/register', payload, {
+      skipAuth: true,
+    });
+    if (response && response.token) {
+      setAuthToken(response.token);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('rora_user_profile', JSON.stringify(response.user));
+      }
+    }
+    return response;
   }
 
   /**

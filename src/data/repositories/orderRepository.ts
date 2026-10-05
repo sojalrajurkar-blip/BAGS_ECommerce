@@ -145,18 +145,13 @@ export const orderRepository = {
    * Fetches customer's orders from the backend.
    */
   async getOrders(): Promise<Order[]> {
-    if (!USE_MOCK) {
-      try {
-        const data = await apiClient.get<BackendOrderDto[] | { content: BackendOrderDto[] }>('/orders/my-orders');
-        const list = Array.isArray(data) ? data : (data?.content || []);
-        if (list.length > 0) {
-          return list.map(mapBackendOrder);
-        }
-      } catch (err) {
-        console.warn('Backend orders fetch failed, falling back to seed orders:', err);
-      }
+    if (USE_MOCK) {
+      return (MOCK_ORDERS as unknown as Order[]);
     }
-    return (MOCK_ORDERS as unknown as Order[]);
+
+    const data = await apiClient.get<BackendOrderDto[] | { content: BackendOrderDto[] }>('/orders/my-orders');
+    const list = Array.isArray(data) ? data : (data?.content || []);
+    return list.map(mapBackendOrder);
   },
 
   /**
@@ -164,76 +159,80 @@ export const orderRepository = {
    */
   async getOrderById(id: string): Promise<Order | null> {
     const cleanId = id.replace('#', '');
-    if (!USE_MOCK) {
-      try {
-        const data = await apiClient.get<BackendOrderDto>(`/orders/${cleanId}`);
-        if (data && (data.id || data.orderNumber)) {
-          return mapBackendOrder(data);
-        }
-      } catch (err) {
-        console.warn(`Backend fetch for order "${cleanId}" failed:`, err);
-      }
+    if (USE_MOCK) {
+      const order = (MOCK_ORDERS as unknown as Order[]).find(
+        o => o.id === cleanId || o.orderNumber.replace('#', '') === cleanId
+      );
+      return order || null;
     }
 
-    const order = (MOCK_ORDERS as unknown as Order[]).find(
-      o => o.id === cleanId || o.orderNumber.replace('#', '') === cleanId
-    );
-    return order || null;
+    try {
+      const data = await apiClient.get<BackendOrderDto>(`/orders/${cleanId}`);
+      if (data && (data.id || data.orderNumber)) {
+        return mapBackendOrder(data);
+      }
+      return null;
+    } catch (err: unknown) {
+      const status = (err as { status?: number })?.status;
+      if (status === 404) {
+        return null;
+      }
+      throw err;
+    }
   },
 
   /**
    * Authoritative order placement connecting to `/api/v1/checkout/place-order`.
    */
   async placeOrder(orderPayload: PlaceOrderPayload): Promise<Order> {
-    const sessionId = getSessionId();
-
-    try {
-      const payload = {
-        customerName: orderPayload.customerName || 'Valued Client',
-        customerEmail: orderPayload.customerEmail || 'client@rora-luxury.com',
-        customerPhone: orderPayload.customerPhone || '+91 98200 12345',
-        shippingAddress: {
-          fullName: orderPayload.shippingAddress.fullName || orderPayload.customerName,
-          street: orderPayload.shippingAddress.street || orderPayload.shippingAddress.addressLine1 || 'Main Street',
-          addressLine2: orderPayload.shippingAddress.addressLine2,
-          city: orderPayload.shippingAddress.city || 'Mumbai',
-          state: orderPayload.shippingAddress.state || 'Maharashtra',
-          postalCode: orderPayload.shippingAddress.postalCode || '400001',
-          country: orderPayload.shippingAddress.country || 'India',
-          phone: orderPayload.shippingAddress.phone || orderPayload.customerPhone,
-        },
-        billingAddress: orderPayload.billingAddress || orderPayload.shippingAddress,
-        paymentMethod: orderPayload.paymentMethod || 'Mock Gateway',
-        couponCode: orderPayload.couponCode,
-        sessionId,
+    if (USE_MOCK) {
+      const newOrderNumber = `#RRA${Math.floor(10000 + Math.random() * 90000)}`;
+      const newOrder: Order = {
+        id: newOrderNumber.replace('#', ''),
+        orderNumber: newOrderNumber,
+        date: new Date().toLocaleDateString('en-IN', { month: 'long', day: 'numeric', year: 'numeric' }),
+        status: 'Processing',
+        total: 0,
+        items: [],
+        shippingAddress: orderPayload.shippingAddress,
+        timeline: [
+          { step: 'Order Placed', time: 'Just now', completed: true },
+          { step: 'Payment Verified', time: 'Just now', completed: true },
+          { step: 'Dispatched from Hub', time: 'Pending', completed: false },
+          { step: 'Out for Delivery', time: 'Pending', completed: false },
+          { step: 'Delivered', time: 'Pending', completed: false }
+        ]
       };
-
-      const res = await apiClient.post<BackendOrderDto>('/checkout/place-order', payload);
-      if (res && (res.id || res.orderNumber)) {
-        return mapBackendOrder(res);
-      }
-    } catch (err) {
-      console.warn('Backend place-order failed, creating simulated order for demo:', err);
+      return newOrder;
     }
 
-    const newOrderNumber = `#RRA${Math.floor(10000 + Math.random() * 90000)}`;
-    const newOrder: Order = {
-      id: newOrderNumber.replace('#', ''),
-      orderNumber: newOrderNumber,
-      date: new Date().toLocaleDateString('en-IN', { month: 'long', day: 'numeric', year: 'numeric' }),
-      status: 'Processing',
-      total: 0,
-      items: [],
-      shippingAddress: orderPayload.shippingAddress,
-      timeline: [
-        { step: 'Order Placed', time: 'Just now', completed: true },
-        { step: 'Payment Verified', time: 'Just now', completed: true },
-        { step: 'Dispatched from Hub', time: 'Pending', completed: false },
-        { step: 'Out for Delivery', time: 'Pending', completed: false },
-        { step: 'Delivered', time: 'Pending', completed: false }
-      ]
+    const sessionId = getSessionId();
+
+    const payload = {
+      customerName: orderPayload.customerName || 'Valued Client',
+      customerEmail: orderPayload.customerEmail || 'client@rora-luxury.com',
+      customerPhone: orderPayload.customerPhone || '+91 98200 12345',
+      shippingAddress: {
+        fullName: orderPayload.shippingAddress.fullName || orderPayload.customerName,
+        street: orderPayload.shippingAddress.street || orderPayload.shippingAddress.addressLine1 || 'Main Street',
+        addressLine2: orderPayload.shippingAddress.addressLine2,
+        city: orderPayload.shippingAddress.city || 'Mumbai',
+        state: orderPayload.shippingAddress.state || 'Maharashtra',
+        postalCode: orderPayload.shippingAddress.postalCode || '400001',
+        country: orderPayload.shippingAddress.country || 'India',
+        phone: orderPayload.shippingAddress.phone || orderPayload.customerPhone,
+      },
+      billingAddress: orderPayload.billingAddress || orderPayload.shippingAddress,
+      paymentMethod: orderPayload.paymentMethod || 'Credit Card / Net Banking',
+      couponCode: orderPayload.couponCode,
+      sessionId,
     };
-    return newOrder;
+
+    const res = await apiClient.post<BackendOrderDto>('/checkout/place-order', payload);
+    if (!res || (!res.id && !res.orderNumber)) {
+      throw new Error('Failed to create order: Invalid backend response');
+    }
+    return mapBackendOrder(res);
   },
 
   /**
@@ -241,16 +240,22 @@ export const orderRepository = {
    */
   async trackOrder(orderNumber: string): Promise<Order | null> {
     const cleanNumber = orderNumber.replace('#', '');
-    if (!USE_MOCK) {
-      try {
-        const data = await apiClient.get<BackendOrderDto>(`/orders/track/${cleanNumber}`);
-        if (data && (data.id || data.orderNumber)) {
-          return mapBackendOrder(data);
-        }
-      } catch {
-        // Fallback to regular order lookup
-      }
+    if (USE_MOCK) {
+      return this.getOrderById(cleanNumber);
     }
-    return this.getOrderById(cleanNumber);
+
+    try {
+      const data = await apiClient.get<BackendOrderDto>(`/orders/track/${cleanNumber}`);
+      if (data && (data.id || data.orderNumber)) {
+        return mapBackendOrder(data);
+      }
+      return null;
+    } catch (err: unknown) {
+      const status = (err as { status?: number })?.status;
+      if (status === 404) {
+        return null;
+      }
+      throw err;
+    }
   }
 };
