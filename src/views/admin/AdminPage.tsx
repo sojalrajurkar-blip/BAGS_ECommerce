@@ -171,58 +171,77 @@ export const AdminPage: React.FC = () => {
         <div className="admin-login-card">
           <div className="login-header">
             <span className="login-brand font-serif">RÓRA</span>
-            <span className="login-badge">Admin Studio Console</span>
-            <h1 className="login-title font-serif">Studio Operator Sign In</h1>
+            <span className="login-badge">Studio Executive Terminal</span>
+            <h1 className="login-title font-serif">Operator Authentication</h1>
             <p className="login-subtitle">
-              Authenticate with Spring Boot JWT or use one-click demo access.
+              Secure Spring Boot 3.4.3 JWT session with full module authorization.
             </p>
           </div>
 
-          <form onSubmit={handleDemoLogin} className="login-form">
-            <div className="form-group">
-              <label className="form-label">Operator Email</label>
+          <form onSubmit={handleDemoLogin} className="admin-login-form">
+            <div className="admin-form-group">
+              <label className="admin-form-label">Operator Work Email</label>
               <input
                 type="email"
                 required
-                className="form-input"
+                className="admin-form-input"
                 value={loginEmail}
                 onChange={(e) => setLoginEmail(e.target.value)}
+                placeholder="admin@rora-luxury.com"
               />
             </div>
 
-            <div className="form-group">
-              <label className="form-label">Password</label>
+            <div className="admin-form-group">
+              <label className="admin-form-label">Master Access Password</label>
               <input
                 type="password"
                 required
-                className="form-input"
+                className="admin-form-input"
                 value={loginPassword}
                 onChange={(e) => setLoginPassword(e.target.value)}
+                placeholder="••••••••••••"
               />
             </div>
 
-            <button type="submit" disabled={isSubmitting} className="btn btn-primary btn-full">
-              {isSubmitting ? 'Verifying Token...' : 'Sign In to Admin Portal'} <ArrowRight size={16} />
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="btn-admin-primary"
+              style={{ width: '100%', padding: '0.85rem', marginTop: '0.75rem' }}
+            >
+              {isSubmitting ? 'Verifying Authorization...' : 'Authenticate Operator'}
+              <ArrowRight size={16} />
             </button>
           </form>
 
-          <div className="mt-4 pt-4 border-t border-border/40 text-xs text-muted">
-            <span className="font-semibold block mb-2 text-foreground">One-Click Operator Credentials:</span>
+          <div style={{ marginTop: '1.5rem', paddingTop: '1.25rem', borderTop: '1px solid var(--border-subtle)' }}>
+            <span style={{ fontSize: '0.72rem', fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--text-secondary)', display: 'block', marginBottom: '0.5rem' }}>
+              One-Click Operator Credentials:
+            </span>
             <button
               type="button"
-              className="btn btn-secondary btn-sm w-full text-left justify-start mb-2"
+              className="luxury-persona-chip-btn"
               onClick={() => {
                 setLoginEmail('admin@rora-luxury.com');
                 setLoginPassword('Password123!');
               }}
             >
-              👑 Fill Super Admin (admin@rora-luxury.com)
+              <div>
+                <div className="luxury-chip-label">👑 Super Administrator</div>
+                <div className="luxury-chip-email">admin@rora-luxury.com • Password123!</div>
+              </div>
+              <span className="admin-badge">Auto Fill</span>
             </button>
           </div>
 
-          <div className="login-footer">
-            <button className="btn btn-text" onClick={() => navigate('home')}>
-              <Store size={14} /> Return to Public Store
+          <div style={{ marginTop: '1.25rem', textAlign: 'center' }}>
+            <button
+              type="button"
+              className="btn-admin-secondary"
+              style={{ width: '100%' }}
+              onClick={() => navigate('home')}
+            >
+              <Store size={14} /> Return to Public Storefront
             </button>
           </div>
         </div>

@@ -303,7 +303,7 @@ public class ProductionDeploymentSmokeVerificationIntegrationTest {
                         .header("Authorization", "Bearer " + customerJwt))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.orderNumber").value(orderNumber))
-                .andExpect(jsonPath("$.data.paymentStatus").value("Captured"))
+                .andExpect(jsonPath("$.data.paymentStatus").value("Pending"))
                 .andExpect(jsonPath("$.data.timeline", hasSize(greaterThanOrEqualTo(2))));
 
         // 9. Shipment Consignment & Carrier Dispatch

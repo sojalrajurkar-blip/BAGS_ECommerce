@@ -23,6 +23,15 @@ public class AdminProductController {
 
     private final ProductService productService;
 
+    @GetMapping
+    @Operation(summary = "Get admin products", description = "Get paginated filtered catalog products for admin management")
+    public ResponseEntity<ApiResponse<com.rora.backend.common.PagedResponse<ProductDto>>> getProducts(
+            @ModelAttribute ProductFilterParams filterParams
+    ) {
+        com.rora.backend.common.PagedResponse<ProductDto> products = productService.getFilteredProducts(filterParams != null ? filterParams : new ProductFilterParams());
+        return ResponseEntity.ok(ApiResponse.success("Products retrieved successfully", products));
+    }
+
     @PostMapping
     @Operation(summary = "Create product", description = "Create a new catalog product with variants and specifications")
     public ResponseEntity<ApiResponse<ProductDetailDto>> createProduct(@Valid @RequestBody ProductCreateRequest request) {

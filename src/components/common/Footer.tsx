@@ -1,12 +1,18 @@
 'use client';
 
 import React, { useState } from 'react';
+import { usePathname } from 'next/navigation';
 import { useStore } from '../../context/StoreContext';
 import { ArrowRight, ShieldCheck, RefreshCw, Truck, Award } from 'lucide-react';
 
 export const Footer: React.FC = () => {
-  const { navigate, addToast } = useStore();
+  const pathname = usePathname();
+  const { navigate, currentRoute, addToast } = useStore();
   const [email, setEmail] = useState('');
+
+  if (pathname?.startsWith('/admin') || currentRoute?.page === 'admin') {
+    return null;
+  }
 
   const handleSubscribe = (e: React.FormEvent) => {
     e.preventDefault();

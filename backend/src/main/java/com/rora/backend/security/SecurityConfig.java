@@ -24,14 +24,17 @@ public class SecurityConfig {
 
     private final CustomUserDetailsService customUserDetailsService;
     private final JwtAuthenticationEntryPoint unauthorizedHandler;
+    private final JwtAccessDeniedHandler accessDeniedHandler;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @Autowired
     public SecurityConfig(CustomUserDetailsService customUserDetailsService,
                           JwtAuthenticationEntryPoint unauthorizedHandler,
+                          JwtAccessDeniedHandler accessDeniedHandler,
                           JwtAuthenticationFilter jwtAuthenticationFilter) {
         this.customUserDetailsService = customUserDetailsService;
         this.unauthorizedHandler = unauthorizedHandler;
+        this.accessDeniedHandler = accessDeniedHandler;
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
     }
 
@@ -58,7 +61,10 @@ public class SecurityConfig {
         http
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> {})
-                .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
+                .exceptionHandling(exception -> exception
+                        .authenticationEntryPoint(unauthorizedHandler)
+                        .accessDeniedHandler(accessDeniedHandler)
+                )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         // Public Auth & Health Endpoints
@@ -89,7 +95,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/reviews/**").permitAll()
 
                         // Admin Protected Endpoints
-                        .requestMatchers("/api/v1/admin/**").hasAnyRole("ADMIN", "MANAGER", "PRODUCT_MANAGER", "ORDER_MANAGER", "MARKETING_MANAGER")
+                        .requestMatchers("/api/v1/admin/**").hasAnyRole("ADMIN", "MANAGER", "PRODUCT_MANAGER", "ORDER_MANAGER")
 
                         // Authenticated Customer Endpoints
                         .requestMatchers("/api/v1/account/**").authenticated()

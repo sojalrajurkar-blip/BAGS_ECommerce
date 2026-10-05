@@ -24,6 +24,13 @@ public class AdminCategoryController {
 
     private final CategoryService categoryService;
 
+    @GetMapping
+    @Operation(summary = "Get admin categories", description = "Get list of all product categories")
+    public ResponseEntity<ApiResponse<java.util.List<CategoryDto>>> getCategories() {
+        java.util.List<CategoryDto> categories = categoryService.getAllCategories();
+        return ResponseEntity.ok(ApiResponse.success("Categories retrieved successfully", categories));
+    }
+
     @PostMapping
     @Operation(summary = "Create category", description = "Create a new product category")
     public ResponseEntity<ApiResponse<CategoryDto>> createCategory(@Valid @RequestBody CategoryRequest request) {

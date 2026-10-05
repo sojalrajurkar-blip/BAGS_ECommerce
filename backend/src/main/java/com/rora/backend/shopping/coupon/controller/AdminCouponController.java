@@ -20,7 +20,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/admin/coupons")
 @RequiredArgsConstructor
-@PreAuthorize("hasAnyRole('ADMIN', 'MARKETING_MANAGER')")
+@PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
 @SecurityRequirement(name = "bearerAuth")
 @Tag(name = "Admin Coupons", description = "Admin CRUD operations for Promotional Discount Coupons")
 public class AdminCouponController {

@@ -193,6 +193,61 @@ class OrderServiceTest {
     }
 
     @Test
+    @DisplayName("Place order with WELCOME15 (15% off 3999.00 -> 3399.15)")
+    void testPlaceOrder_WithWelcome15_ExactArithmeticReconciliation() {
+        Product campusExplorer = Product.builder()
+                .id("prod-campus")
+                .name("The Campus Explorer")
+                .price(BigDecimal.valueOf(3999.00))
+                .stock(10)
+                .build();
+
+        ProductVariant campusVariant = ProductVariant.builder()
+                .id("var-campus-1")
+                .product(campusExplorer)
+                .colorName("Olive Green")
+                .stock(5)
+                .build();
+
+        CheckoutRequest request = CheckoutRequest.builder()
+                .customerName("Sarah Johnson")
+                .customerEmail("sarah.customer@rora-luxury.com")
+                .shippingAddress(testAddress)
+                .couponCode("WELCOME15")
+                .items(List.of(
+                        CheckoutItemDto.builder()
+                                .productId("prod-campus")
+                                .variantId("var-campus-1")
+                                .quantity(1)
+                                .build()
+                ))
+                .build();
+
+        when(userRepository.findById("user-100")).thenReturn(Optional.of(testUser));
+        when(productRepository.findById("prod-campus")).thenReturn(Optional.of(campusExplorer));
+        when(productVariantRepository.findById("var-campus-1")).thenReturn(Optional.of(campusVariant));
+        when(couponService.validateCoupon("WELCOME15", BigDecimal.valueOf(3999.00), "user-100"))
+                .thenReturn(CouponValidationResult.builder()
+                        .valid(true)
+                        .code("WELCOME15")
+                        .discountAmount(BigDecimal.valueOf(599.85))
+                        .build());
+        when(orderRepository.save(any(Order.class))).thenAnswer(invocation -> {
+            Order o = invocation.getArgument(0);
+            o.setId("order-uuid-welcome15");
+            return o;
+        });
+
+        OrderDto result = orderService.placeOrder("user-100", request);
+
+        assertNotNull(result);
+        assertEquals(0, BigDecimal.valueOf(3999.00).compareTo(result.getSubtotal()), "Subtotal must be 3999.00");
+        assertEquals(0, BigDecimal.valueOf(599.85).compareTo(result.getDiscountAmount()), "15% discount on 3999.00 must be 599.85");
+        assertEquals(0, BigDecimal.ZERO.compareTo(result.getShippingFee()), "Shipping fee must be free (0.00)");
+        assertEquals(0, BigDecimal.valueOf(3399.15).compareTo(result.getTotal()), "Final total must be 3999.00 - 599.85 = 3399.15");
+    }
+
+    @Test
     @DisplayName("Place order from cart throws BadRequestException if cart is empty")
     void testPlaceOrder_EmptyCart_ThrowsBadRequest() {
         CheckoutRequest request = CheckoutRequest.builder()

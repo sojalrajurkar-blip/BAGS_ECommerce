@@ -15,6 +15,7 @@ import com.rora.backend.shopping.cart.repository.CartItemRepository;
 import com.rora.backend.shopping.cart.repository.CartRepository;
 import com.rora.backend.shopping.coupon.entity.Coupon;
 import com.rora.backend.shopping.coupon.repository.CouponRepository;
+import com.rora.backend.shopping.coupon.repository.CouponUsageRepository;
 import com.rora.backend.shopping.wishlist.repository.WishlistItemRepository;
 import com.rora.backend.shopping.wishlist.repository.WishlistRepository;
 import com.rora.backend.user.Role;
@@ -68,6 +69,9 @@ class ShoppingIntegrationTest {
     private CouponRepository couponRepository;
 
     @Autowired
+    private CouponUsageRepository couponUsageRepository;
+
+    @Autowired
     private ProductRepository productRepository;
 
     @Autowired
@@ -103,6 +107,7 @@ class ShoppingIntegrationTest {
         cartRepository.deleteAll();
         wishlistItemRepository.deleteAll();
         wishlistRepository.deleteAll();
+        couponUsageRepository.deleteAll();
         couponRepository.deleteAll();
         productVariantRepository.deleteAll();
         productRepository.deleteAll();

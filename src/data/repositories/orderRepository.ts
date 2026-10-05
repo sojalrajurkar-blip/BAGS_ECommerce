@@ -61,8 +61,8 @@ export interface BackendOrderDto {
   orderDate?: string;
   createdAt?: string;
   date?: string;
-  shippingAddress?: any;
-  billingAddress?: any;
+  shippingAddress?: Address;
+  billingAddress?: Address;
   items?: BackendOrderItemDto[];
   timeline?: BackendTimelineDto[];
 }

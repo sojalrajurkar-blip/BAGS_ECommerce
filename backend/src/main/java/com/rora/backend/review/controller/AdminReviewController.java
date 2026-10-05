@@ -23,7 +23,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/v1/admin/reviews")
 @RequiredArgsConstructor
-@PreAuthorize("hasAnyRole('ADMIN', 'SUPER_ADMIN', 'MANAGER', 'PRODUCT_MANAGER', 'MARKETING_MANAGER')")
+@PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'PRODUCT_MANAGER')")
 @Tag(name = "Admin Reviews", description = "Backoffice customer review moderation, status transitions, curation, and analytics")
 public class AdminReviewController {
 

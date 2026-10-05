@@ -16,7 +16,7 @@ interface BackendCouponValidationResponse {
 export const couponRepository = {
   async getCoupons(): Promise<Coupon[]> {
     try {
-      const data = await apiClient.get<Coupon[]>('/coupons/active');
+      const data = await apiClient.get<Coupon[]>('/coupons');
       if (Array.isArray(data) && data.length > 0) {
         return data;
       }
@@ -31,9 +31,11 @@ export const couponRepository = {
     const clean = code.trim().toUpperCase();
 
     try {
-      const res = await apiClient.post<BackendCouponValidationResponse>('/coupons/validate', {
-        code: clean,
-        orderAmount: orderAmount || 1000
+      const res = await apiClient.get<BackendCouponValidationResponse>('/coupons/validate', {
+        params: {
+          code: clean,
+          subtotal: orderAmount || 0,
+        },
       });
 
       if (res && res.valid) {

@@ -1,10 +1,12 @@
 'use client';
 
 import React from 'react';
+import { usePathname } from 'next/navigation';
 import { useStore } from '../../context/StoreContext';
 import { Search, User, Heart, ShoppingBag, Menu, X } from 'lucide-react';
 
 export const Header: React.FC = () => {
+  const pathname = usePathname();
   const {
     navigate,
     currentRoute,
@@ -21,6 +23,10 @@ export const Header: React.FC = () => {
   React.useEffect(() => {
     setMounted(true);
   }, []);
+
+  if (pathname?.startsWith('/admin') || currentRoute.page === 'admin') {
+    return null;
+  }
 
   const isCurrent = (page: string) => currentRoute.page === page;
 

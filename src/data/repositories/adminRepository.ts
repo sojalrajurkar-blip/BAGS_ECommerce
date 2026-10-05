@@ -33,7 +33,9 @@ import {
   StoreSettings,
   CMSContent,
   Product,
-  Coupon
+  Coupon,
+  Review,
+  Category
 } from '../../types/domain';
 import { apiClient } from '../apiClient';
 
@@ -46,12 +48,12 @@ export const adminRepository = {
   async getSalesOverview(): Promise<SalesOverview> {
     if (!USE_MOCK) {
       try {
-        const data = await apiClient.get<SalesOverview>('/admin/dashboard/summary');
+        const data = await apiClient.get<SalesOverview>('/admin/dashboard/overview');
         if (data && data.monthlyRevenue) {
           return data;
         }
       } catch (err) {
-        console.warn('Backend admin dashboard API error:', err);
+        console.warn('Backend admin dashboard overview API error:', err);
       }
     }
     return { ...MOCK_SALES_OVERVIEW } as unknown as SalesOverview;
@@ -63,9 +65,10 @@ export const adminRepository = {
   async getCustomers(): Promise<Customer[]> {
     if (!USE_MOCK) {
       try {
-        const data = await apiClient.get<Customer[]>('/admin/customers');
-        if (Array.isArray(data) && data.length > 0) {
-          return data;
+        const data = await apiClient.get<Customer[] | { content: Customer[] }>('/admin/customers');
+        const list = Array.isArray(data) ? data : (data?.content || []);
+        if (list.length > 0) {
+          return list;
         }
       } catch (err) {
         console.warn('Backend admin customers query failed:', err);
@@ -80,9 +83,10 @@ export const adminRepository = {
   async getPayments(): Promise<PaymentRecord[]> {
     if (!USE_MOCK) {
       try {
-        const data = await apiClient.get<PaymentRecord[]>('/admin/payments');
-        if (Array.isArray(data) && data.length > 0) {
-          return data;
+        const data = await apiClient.get<PaymentRecord[] | { content: PaymentRecord[] }>('/admin/payments');
+        const list = Array.isArray(data) ? data : (data?.content || []);
+        if (list.length > 0) {
+          return list;
         }
       } catch (err) {
         console.warn('Backend admin payments query failed:', err);
@@ -97,9 +101,10 @@ export const adminRepository = {
   async getShipments(): Promise<ShipmentRecord[]> {
     if (!USE_MOCK) {
       try {
-        const data = await apiClient.get<ShipmentRecord[]>('/admin/shipments');
-        if (Array.isArray(data) && data.length > 0) {
-          return data;
+        const data = await apiClient.get<ShipmentRecord[] | { content: ShipmentRecord[] }>('/admin/shipments');
+        const list = Array.isArray(data) ? data : (data?.content || []);
+        if (list.length > 0) {
+          return list;
         }
       } catch (err) {
         console.warn('Backend admin shipments query failed:', err);
@@ -114,9 +119,10 @@ export const adminRepository = {
   async getReturns(): Promise<ReturnRecord[]> {
     if (!USE_MOCK) {
       try {
-        const data = await apiClient.get<ReturnRecord[]>('/admin/returns');
-        if (Array.isArray(data) && data.length > 0) {
-          return data;
+        const data = await apiClient.get<ReturnRecord[] | { content: ReturnRecord[] }>('/admin/returns');
+        const list = Array.isArray(data) ? data : (data?.content || []);
+        if (list.length > 0) {
+          return list;
         }
       } catch (err) {
         console.warn('Backend admin returns query failed:', err);
@@ -127,7 +133,21 @@ export const adminRepository = {
 
   async updateReturnStatus(returnId: string, status: string, notes?: string): Promise<ReturnRecord> {
     try {
-      return await apiClient.put<ReturnRecord>(`/admin/returns/${returnId}/status`, { status, notes });
+      if (status === 'APPROVED') {
+        return await apiClient.post<ReturnRecord>(`/admin/returns/${returnId}/approve`, {
+          inspectionNotes: notes || 'Passed inspection',
+          autoRefund: true,
+          restockInventory: true,
+        });
+      } else if (status === 'REJECTED') {
+        return await apiClient.post<ReturnRecord>(`/admin/returns/${returnId}/reject`, {
+          rejectionReason: notes || 'Item policy verification failed',
+        });
+      } else {
+        return await apiClient.put<ReturnRecord>(`/admin/returns/${returnId}/inspection`, null, {
+          params: { status: 'PASSED_PRISTINE', notes },
+        });
+      }
     } catch {
       return {
         id: returnId,
@@ -148,9 +168,10 @@ export const adminRepository = {
   async getRefunds(): Promise<RefundRecord[]> {
     if (!USE_MOCK) {
       try {
-        const data = await apiClient.get<RefundRecord[]>('/admin/refunds');
-        if (Array.isArray(data) && data.length > 0) {
-          return data;
+        const data = await apiClient.get<RefundRecord[] | { content: RefundRecord[] }>('/admin/refunds');
+        const list = Array.isArray(data) ? data : (data?.content || []);
+        if (list.length > 0) {
+          return list;
         }
       } catch (err) {
         console.warn('Backend admin refunds query failed:', err);
@@ -161,7 +182,10 @@ export const adminRepository = {
 
   async processRefund(refundId: string): Promise<RefundRecord> {
     try {
-      return await apiClient.post<RefundRecord>(`/admin/refunds/${refundId}/settle`, {});
+      return await apiClient.post<RefundRecord>('/admin/refunds', {
+        returnRequestId: refundId,
+        reason: 'Standard customer return settlement',
+      });
     } catch {
       return {
         id: refundId,
@@ -183,9 +207,10 @@ export const adminRepository = {
   async getInventory(): Promise<Partial<Product>[]> {
     if (!USE_MOCK) {
       try {
-        const data = await apiClient.get<Product[]>('/admin/inventory');
-        if (Array.isArray(data) && data.length > 0) {
-          return data;
+        const data = await apiClient.get<Product[] | { content: Product[] }>('/admin/inventory');
+        const list = Array.isArray(data) ? data : (data?.content || []);
+        if (list.length > 0) {
+          return list;
         }
       } catch (err) {
         console.warn('Backend admin inventory query failed:', err);
@@ -201,9 +226,15 @@ export const adminRepository = {
     }));
   },
 
-  async adjustStock(skuOrId: string, quantityChange: number, reason = 'Studio Stock Adjustment'): Promise<any> {
+  async adjustStock(skuOrId: string, quantityChange: number, reason = 'Studio Stock Adjustment'): Promise<{ success: boolean }> {
     try {
-      return await apiClient.post('/admin/inventory/adjust', { sku: skuOrId, quantityChange, reason });
+      await apiClient.post('/admin/inventory/adjust', {
+        sku: skuOrId,
+        quantityChange,
+        movementType: quantityChange >= 0 ? 'RESTOCK' : 'MANUAL_ADJUSTMENT',
+        reason,
+      });
+      return { success: true };
     } catch {
       return { success: true };
     }
@@ -215,9 +246,10 @@ export const adminRepository = {
   async getAdminUsers(): Promise<AdminUser[]> {
     if (!USE_MOCK) {
       try {
-        const data = await apiClient.get<AdminUser[]>('/admin/users');
-        if (Array.isArray(data) && data.length > 0) {
-          return data;
+        const data = await apiClient.get<AdminUser[] | { content: AdminUser[] }>('/admin/users');
+        const list = Array.isArray(data) ? data : (data?.content || []);
+        if (list.length > 0) {
+          return list;
         }
       } catch (err) {
         console.warn('Backend admin users query failed:', err);
@@ -232,9 +264,10 @@ export const adminRepository = {
   async getRoles(): Promise<AdminRole[]> {
     if (!USE_MOCK) {
       try {
-        const data = await apiClient.get<AdminRole[]>('/admin/roles');
-        if (Array.isArray(data) && data.length > 0) {
-          return data;
+        const data = await apiClient.get<AdminRole[] | { content: AdminRole[] }>('/admin/roles');
+        const list = Array.isArray(data) ? data : (data?.content || []);
+        if (list.length > 0) {
+          return list;
         }
       } catch (err) {
         console.warn('Backend admin roles query failed:', err);
@@ -274,9 +307,10 @@ export const adminRepository = {
   async getAuditLogs(): Promise<AuditLog[]> {
     if (!USE_MOCK) {
       try {
-        const data = await apiClient.get<AuditLog[]>('/admin/audit-logs');
-        if (Array.isArray(data) && data.length > 0) {
-          return data;
+        const data = await apiClient.get<AuditLog[] | { content: AuditLog[] }>('/admin/audit-logs');
+        const list = Array.isArray(data) ? data : (data?.content || []);
+        if (list.length > 0) {
+          return list;
         }
       } catch (err) {
         console.warn('Backend admin audit logs query failed:', err);
@@ -307,6 +341,165 @@ export const adminRepository = {
       return await apiClient.put<CMSContent>('/admin/cms', content);
     } catch {
       return { ...MOCK_CMS, ...content } as unknown as CMSContent;
+    }
+  },
+
+  /**
+   * 13. Customer Reviews Moderation
+   */
+  async getReviews(params?: { search?: string; status?: string }): Promise<Review[]> {
+    if (!USE_MOCK) {
+      try {
+        const data = await apiClient.get<Review[] | { content: Review[] }>('/admin/reviews', { params });
+        const list = Array.isArray(data) ? data : (data?.content || []);
+        if (list.length > 0) {
+          return list;
+        }
+      } catch (err) {
+        console.warn('Backend admin reviews query failed:', err);
+      }
+    }
+    return [];
+  },
+
+  async moderateReview(id: string, status: string, notes?: string): Promise<Review | null> {
+    try {
+      return await apiClient.put<Review>(`/admin/reviews/${id}/moderate`, {
+        status,
+        moderationNotes: notes || '',
+      });
+    } catch {
+      return null;
+    }
+  },
+
+  async deleteReview(id: string): Promise<boolean> {
+    try {
+      await apiClient.delete(`/admin/reviews/${id}`);
+      return true;
+    } catch {
+      return false;
+    }
+  },
+
+  /**
+   * 14. Promotional Coupons Management
+   */
+  async getCoupons(): Promise<Coupon[]> {
+    if (!USE_MOCK) {
+      try {
+        const data = await apiClient.get<Coupon[] | { content: Coupon[] }>('/admin/coupons');
+        const list = Array.isArray(data) ? data : (data?.content || []);
+        if (list.length > 0) {
+          return list;
+        }
+      } catch (err) {
+        console.warn('Backend admin coupons query failed:', err);
+      }
+    }
+    return [];
+  },
+
+  async createCoupon(payload: Partial<Coupon>): Promise<Coupon | null> {
+    try {
+      return await apiClient.post<Coupon>('/admin/coupons', payload);
+    } catch {
+      return null;
+    }
+  },
+
+  async deleteCoupon(id: string): Promise<boolean> {
+    try {
+      await apiClient.delete(`/admin/coupons/${id}`);
+      return true;
+    } catch {
+      return false;
+    }
+  },
+
+  /**
+   * 15. Products CRUD
+   */
+  async getProducts(params?: { search?: string; category?: string }): Promise<Product[]> {
+    if (!USE_MOCK) {
+      try {
+        const data = await apiClient.get<Product[] | { content: Product[] }>('/admin/products', { params });
+        const list = Array.isArray(data) ? data : (data?.content || []);
+        if (list.length > 0) {
+          return list;
+        }
+      } catch (err) {
+        console.warn('Backend admin products query failed:', err);
+      }
+    }
+    return [...PRODUCTS];
+  },
+
+  async createProduct(payload: Partial<Product>): Promise<Product | null> {
+    try {
+      return await apiClient.post<Product>('/admin/products', payload);
+    } catch {
+      return null;
+    }
+  },
+
+  async updateProduct(id: string, payload: Partial<Product>): Promise<Product | null> {
+    try {
+      return await apiClient.put<Product>(`/admin/products/${id}`, payload);
+    } catch {
+      return null;
+    }
+  },
+
+  async deleteProduct(id: string): Promise<boolean> {
+    try {
+      await apiClient.delete(`/admin/products/${id}`);
+      return true;
+    } catch {
+      return false;
+    }
+  },
+
+  /**
+   * 16. Categories CRUD
+   */
+  async getCategories(): Promise<Category[]> {
+    if (!USE_MOCK) {
+      try {
+        const data = await apiClient.get<Category[] | { content: Category[] }>('/admin/categories');
+        const list = Array.isArray(data) ? data : (data?.content || []);
+        if (list.length > 0) {
+          return list;
+        }
+      } catch (err) {
+        console.warn('Backend admin categories query failed:', err);
+      }
+    }
+    return [];
+  },
+
+  async createCategory(payload: Partial<Category>): Promise<Category | null> {
+    try {
+      return await apiClient.post<Category>('/admin/categories', payload);
+    } catch {
+      return null;
+    }
+  },
+
+  async updateCategory(id: string, payload: Partial<Category>): Promise<Category | null> {
+    try {
+      return await apiClient.put<Category>(`/admin/categories/${id}`, payload);
+    } catch {
+      return null;
+    }
+  },
+
+  async deleteCategory(id: string): Promise<boolean> {
+    try {
+      await apiClient.delete(`/admin/categories/${id}`);
+      return true;
+    } catch {
+      return false;
     }
   },
 };

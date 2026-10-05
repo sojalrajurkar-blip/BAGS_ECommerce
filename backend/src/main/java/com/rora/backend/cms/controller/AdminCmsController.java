@@ -20,6 +20,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/admin/cms")
 @RequiredArgsConstructor
+@PreAuthorize("hasAnyRole('ADMIN', 'MANAGER') or hasAuthority('CMS_MANAGE')")
 @Tag(name = "Admin CMS & Content", description = "Backoffice management of hero banners, editorial journal articles, and store FAQs")
 public class AdminCmsController {
 
@@ -28,7 +29,6 @@ public class AdminCmsController {
     // --- Homepage CMS Content ---
 
     @GetMapping("/content")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'MARKETING_MANAGER') or hasAuthority('CMS_MANAGE')")
     @Operation(summary = "Get Full CMS Content", description = "Retrieve current homepage CMS configuration for editing")
     public ResponseEntity<ApiResponse<CMSContentDto>> getAdminCmsContent() {
         CMSContentDto content = cmsService.getHomepageCms();
@@ -36,7 +36,6 @@ public class AdminCmsController {
     }
 
     @PutMapping("/content")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'MARKETING_MANAGER') or hasAuthority('CMS_MANAGE')")
     @Operation(summary = "Update Homepage CMS Content", description = "Update hero banners, announcement bar, and craftsmanship stories")
     public ResponseEntity<ApiResponse<CMSContentDto>> updateHomepageCms(
             @Valid @RequestBody CMSContentDto request,
@@ -49,7 +48,6 @@ public class AdminCmsController {
     // --- Journal Management ---
 
     @GetMapping("/journal")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'MARKETING_MANAGER') or hasAuthority('CMS_MANAGE')")
     @Operation(summary = "Search & List Journal Articles", description = "Paginated article search with category and keyword filters")
     public ResponseEntity<ApiResponse<PagedResponse<JournalArticleDto>>> searchJournalArticles(
             @RequestParam(required = false) String category,
@@ -61,7 +59,6 @@ public class AdminCmsController {
     }
 
     @GetMapping("/journal/{idOrSlug}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'MARKETING_MANAGER') or hasAuthority('CMS_MANAGE')")
     @Operation(summary = "Get Journal Article by ID", description = "Retrieve single article for backoffice editorial review")
     public ResponseEntity<ApiResponse<JournalArticleDto>> getJournalArticleById(
             @PathVariable String idOrSlug) {
@@ -70,7 +67,6 @@ public class AdminCmsController {
     }
 
     @PostMapping("/journal")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'MARKETING_MANAGER') or hasAuthority('CMS_MANAGE')")
     @Operation(summary = "Publish Journal Article", description = "Create and publish a new editorial article")
     public ResponseEntity<ApiResponse<JournalArticleDto>> createJournalArticle(
             @Valid @RequestBody CreateJournalArticleRequest request,
@@ -82,7 +78,6 @@ public class AdminCmsController {
     }
 
     @PutMapping("/journal/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'MARKETING_MANAGER') or hasAuthority('CMS_MANAGE')")
     @Operation(summary = "Update Journal Article", description = "Modify title, content, imagery, or category of an existing article")
     public ResponseEntity<ApiResponse<JournalArticleDto>> updateJournalArticle(
             @PathVariable String id,
@@ -94,7 +89,6 @@ public class AdminCmsController {
     }
 
     @DeleteMapping("/journal/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'MARKETING_MANAGER') or hasAuthority('CMS_MANAGE')")
     @Operation(summary = "Delete Journal Article", description = "Remove an article from the editorial publication")
     public ResponseEntity<ApiResponse<Void>> deleteJournalArticle(
             @PathVariable String id,
@@ -107,7 +101,6 @@ public class AdminCmsController {
     // --- FAQ Management ---
 
     @GetMapping("/faqs")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'MARKETING_MANAGER') or hasAuthority('CMS_MANAGE')")
     @Operation(summary = "List All FAQ Items", description = "Retrieve flat list of all active and inactive FAQ items")
     public ResponseEntity<ApiResponse<List<FaqItemDto>>> getAllFaqItems() {
         List<FaqItemDto> items = cmsService.getAllFaqItems();
@@ -115,7 +108,6 @@ public class AdminCmsController {
     }
 
     @PostMapping("/faqs")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'MARKETING_MANAGER') or hasAuthority('CMS_MANAGE')")
     @Operation(summary = "Create FAQ Item", description = "Add a new categorized question and answer pair")
     public ResponseEntity<ApiResponse<FaqItemDto>> createFaqItem(
             @Valid @RequestBody CreateFaqItemRequest request,
@@ -127,7 +119,6 @@ public class AdminCmsController {
     }
 
     @PutMapping("/faqs/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'MARKETING_MANAGER') or hasAuthority('CMS_MANAGE')")
     @Operation(summary = "Update FAQ Item", description = "Update question, answer, category, or order of an FAQ item")
     public ResponseEntity<ApiResponse<FaqItemDto>> updateFaqItem(
             @PathVariable String id,
@@ -139,7 +130,6 @@ public class AdminCmsController {
     }
 
     @DeleteMapping("/faqs/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN', 'MANAGER', 'MARKETING_MANAGER') or hasAuthority('CMS_MANAGE')")
     @Operation(summary = "Delete FAQ Item", description = "Remove an FAQ item from the store knowledge base")
     public ResponseEntity<ApiResponse<Void>> deleteFaqItem(
             @PathVariable String id,

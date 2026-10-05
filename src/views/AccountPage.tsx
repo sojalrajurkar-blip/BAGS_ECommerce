@@ -141,208 +141,233 @@ export const AccountPage: React.FC = () => {
   // If user is not authenticated, show luxury customer auth screen
   if (!user) {
     return (
-      <div className="account-page container section-sm" ref={pageRef}>
-        <Breadcrumbs items={[{ label: 'Account Sign In' }]} />
+      <div className="luxury-auth-stage" ref={pageRef}>
+        <div className="container">
+          <Breadcrumbs items={[{ label: 'Clientele Sign In' }]} />
 
-        <div className="auth-container max-w-md mx-auto my-8 p-6 sm:p-8 bg-card border border-border rounded-xl shadow-sm">
-          <div className="text-center mb-8">
-            <span className="font-serif text-3xl font-medium tracking-tight text-foreground">RÓRA</span>
-            <p className="text-xs uppercase tracking-widest text-muted-foreground mt-1">Client Privileges & Orders</p>
-            <h1 className="text-2xl font-serif mt-4 text-foreground">
-              {authMode === 'login' ? 'Sign In to Your Account' : 'Create a Client Profile'}
-            </h1>
-            <p className="text-sm text-muted-foreground mt-2">
-              {authMode === 'login'
-                ? 'Access your private order history, tracking, and curated wishlist.'
-                : 'Join the atelier circle for early preview access and lifetime warranty.'}
-            </p>
-          </div>
+          <div className="luxury-auth-grid">
+            {/* Left Editorial Visual & Atelier Storytelling */}
+            <div className="luxury-auth-hero">
+              <img
+                src="https://images.unsplash.com/photo-1548036328-c9fa89d128fa?auto=format&fit=crop&w=1200&q=80"
+                alt="RÓRA Handcrafted Carry Essential"
+                className="luxury-auth-hero-img"
+              />
+              <div className="luxury-auth-hero-overlay" />
 
-          {/* Tab Switcher */}
-          <div className="flex border-b border-border mb-6">
-            <button
-              type="button"
-              className={`flex-1 py-3 text-sm font-medium border-b-2 transition-colors ${
-                authMode === 'login'
-                  ? 'border-foreground text-foreground font-semibold'
-                  : 'border-transparent text-muted-foreground hover:text-foreground'
-              }`}
-              onClick={() => setAuthMode('login')}
-            >
-              Sign In
-            </button>
-            <button
-              type="button"
-              className={`flex-1 py-3 text-sm font-medium border-b-2 transition-colors ${
-                authMode === 'register'
-                  ? 'border-foreground text-foreground font-semibold'
-                  : 'border-transparent text-muted-foreground hover:text-foreground'
-              }`}
-              onClick={() => setAuthMode('register')}
-            >
-              Create Account
-            </button>
-          </div>
+              <div className="luxury-auth-hero-content">
+                <div>
+                  <span className="luxury-auth-pill">
+                    <Sparkles size={12} /> RÓRA Atelier Circle
+                  </span>
+                </div>
 
-          {/* Login Form */}
-          {authMode === 'login' && (
-            <form onSubmit={handleLoginSubmit} className="space-y-4">
-              <div>
-                <label className="block text-xs uppercase tracking-wider text-muted-foreground mb-1">
-                  Email Address
-                </label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-3 text-muted-foreground" size={16} />
-                  <input
-                    type="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="sarah.customer@rora-luxury.com"
-                    className="w-full pl-10 pr-3 py-2.5 text-sm bg-background border border-border rounded-lg focus:outline-none focus:ring-1 focus:ring-foreground"
-                  />
+                <div className="luxury-auth-hero-quote">
+                  <h2 className="luxury-auth-hero-title">
+                    Crafted for a Lifetime of Distinguished Journeys.
+                  </h2>
+                  <p className="luxury-auth-hero-desc">
+                    Enter the private atelier client portal to manage bespoke commissions, archival order receipts, and priority dispatch schedules.
+                  </p>
+                </div>
+
+                <div className="luxury-auth-perks-list">
+                  <div className="luxury-auth-perk-item">
+                    <ShieldCheck size={16} className="luxury-auth-perk-icon" />
+                    <span>Lifetime Atelier Repair Guarantee & Material Certification</span>
+                  </div>
+                  <div className="luxury-auth-perk-item">
+                    <Sparkles size={16} className="luxury-auth-perk-icon" />
+                    <span>Exclusive Private Previews & Bespoke Monogramming</span>
+                  </div>
+                  <div className="luxury-auth-perk-item">
+                    <Lock size={16} className="luxury-auth-perk-icon" />
+                    <span>End-to-End Encrypted Client Privacy & Order Vault</span>
+                  </div>
                 </div>
               </div>
-
-              <div>
-                <label className="block text-xs uppercase tracking-wider text-muted-foreground mb-1">
-                  Password
-                </label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-3 text-muted-foreground" size={16} />
-                  <input
-                    type="password"
-                    required
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••••••"
-                    className="w-full pl-10 pr-3 py-2.5 text-sm bg-background border border-border rounded-lg focus:outline-none focus:ring-1 focus:ring-foreground"
-                  />
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="w-full py-3 bg-foreground text-background font-medium text-sm rounded-lg hover:opacity-90 transition-opacity flex items-center justify-center gap-2 mt-6"
-              >
-                {isSubmitting ? 'Authenticating...' : 'Sign In'}
-                <ArrowRight size={16} />
-              </button>
-            </form>
-          )}
-
-          {/* Register Form */}
-          {authMode === 'register' && (
-            <form onSubmit={handleRegisterSubmit} className="space-y-4">
-              <div>
-                <label className="block text-xs uppercase tracking-wider text-muted-foreground mb-1">
-                  Full Name
-                </label>
-                <div className="relative">
-                  <User className="absolute left-3 top-3 text-muted-foreground" size={16} />
-                  <input
-                    type="text"
-                    required
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="Sarah Johnson"
-                    className="w-full pl-10 pr-3 py-2.5 text-sm bg-background border border-border rounded-lg focus:outline-none focus:ring-1 focus:ring-foreground"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs uppercase tracking-wider text-muted-foreground mb-1">
-                  Email Address
-                </label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-3 text-muted-foreground" size={16} />
-                  <input
-                    type="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="sarah@example.com"
-                    className="w-full pl-10 pr-3 py-2.5 text-sm bg-background border border-border rounded-lg focus:outline-none focus:ring-1 focus:ring-foreground"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs uppercase tracking-wider text-muted-foreground mb-1">
-                  Phone Number (Optional)
-                </label>
-                <div className="relative">
-                  <Phone className="absolute left-3 top-3 text-muted-foreground" size={16} />
-                  <input
-                    type="tel"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    placeholder="+91 98200 12345"
-                    className="w-full pl-10 pr-3 py-2.5 text-sm bg-background border border-border rounded-lg focus:outline-none focus:ring-1 focus:ring-foreground"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs uppercase tracking-wider text-muted-foreground mb-1">
-                  Password
-                </label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-3 text-muted-foreground" size={16} />
-                  <input
-                    type="password"
-                    required
-                    minLength={8}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Min 8 characters"
-                    className="w-full pl-10 pr-3 py-2.5 text-sm bg-background border border-border rounded-lg focus:outline-none focus:ring-1 focus:ring-foreground"
-                  />
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="w-full py-3 bg-foreground text-background font-medium text-sm rounded-lg hover:opacity-90 transition-opacity flex items-center justify-center gap-2 mt-6"
-              >
-                {isSubmitting ? 'Creating Profile...' : 'Create Account'}
-                <ArrowRight size={16} />
-              </button>
-            </form>
-          )}
-
-          {/* One-Click Demo Personas */}
-          <div className="mt-8 pt-6 border-t border-border">
-            <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground mb-3">
-              <Sparkles size={14} className="text-amber-500" />
-              <span>One-Click Instant Demo Access</span>
             </div>
-            <div className="space-y-2">
-              <button
-                type="button"
-                className="w-full text-left p-2.5 rounded-lg border border-border hover:bg-muted/50 transition-colors flex items-center justify-between text-xs"
-                onClick={() => fillQuickDemo('sarah.customer@rora-luxury.com', 'Password123!')}
-              >
-                <div>
-                  <div className="font-medium text-foreground">Sarah Customer (VIP Member)</div>
-                  <div className="text-muted-foreground text-[11px]">sarah.customer@rora-luxury.com • Password123!</div>
+
+            {/* Right: Refined Client Auth Card */}
+            <div className="luxury-auth-form-side">
+              <div className="luxury-auth-brand-row">
+                <span className="luxury-auth-brand-emblem">RÓRA</span>
+                <span className="luxury-auth-brand-sub">Clientele Privileges & Access</span>
+              </div>
+
+              {/* Segmented Tab Switcher */}
+              <div className="luxury-auth-tab-switch">
+                <button
+                  type="button"
+                  className={`luxury-auth-tab-btn ${authMode === 'login' ? 'active-tab' : ''}`}
+                  onClick={() => setAuthMode('login')}
+                >
+                  Client Sign In
+                </button>
+                <button
+                  type="button"
+                  className={`luxury-auth-tab-btn ${authMode === 'register' ? 'active-tab' : ''}`}
+                  onClick={() => setAuthMode('register')}
+                >
+                  Create Client Profile
+                </button>
+              </div>
+
+              {/* Sign In Form */}
+              {authMode === 'login' && (
+                <form onSubmit={handleLoginSubmit} className="luxury-auth-form">
+                  <div className="luxury-input-group">
+                    <label className="luxury-input-label">Client Email Address</label>
+                    <div className="luxury-input-field-wrap">
+                      <Mail className="luxury-input-icon" size={16} />
+                      <input
+                        type="email"
+                        required
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="sarah.customer@rora-luxury.com"
+                        className="luxury-input"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="luxury-input-group">
+                    <label className="luxury-input-label">Master Password</label>
+                    <div className="luxury-input-field-wrap">
+                      <Lock className="luxury-input-icon" size={16} />
+                      <input
+                        type="password"
+                        required
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="••••••••••••"
+                        className="luxury-input"
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="luxury-auth-submit-btn"
+                  >
+                    {isSubmitting ? 'Verifying Credentials...' : 'Authenticate & Enter Atelier'}
+                    <ArrowRight size={16} />
+                  </button>
+                </form>
+              )}
+
+              {/* Register Form */}
+              {authMode === 'register' && (
+                <form onSubmit={handleRegisterSubmit} className="luxury-auth-form">
+                  <div className="luxury-input-group">
+                    <label className="luxury-input-label">Full Name</label>
+                    <div className="luxury-input-field-wrap">
+                      <User className="luxury-input-icon" size={16} />
+                      <input
+                        type="text"
+                        required
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        placeholder="Sarah Johnson"
+                        className="luxury-input"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="luxury-input-group">
+                    <label className="luxury-input-label">Email Address</label>
+                    <div className="luxury-input-field-wrap">
+                      <Mail className="luxury-input-icon" size={16} />
+                      <input
+                        type="email"
+                        required
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="sarah@example.com"
+                        className="luxury-input"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="luxury-input-group">
+                    <label className="luxury-input-label">Phone Number (Optional)</label>
+                    <div className="luxury-input-field-wrap">
+                      <Phone className="luxury-input-icon" size={16} />
+                      <input
+                        type="tel"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        placeholder="+91 98200 12345"
+                        className="luxury-input"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="luxury-input-group">
+                    <label className="luxury-input-label">Choose Password</label>
+                    <div className="luxury-input-field-wrap">
+                      <Lock className="luxury-input-icon" size={16} />
+                      <input
+                        type="password"
+                        required
+                        minLength={8}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="Minimum 8 characters"
+                        className="luxury-input"
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="luxury-auth-submit-btn"
+                  >
+                    {isSubmitting ? 'Creating Atelier Profile...' : 'Complete Registration'}
+                    <ArrowRight size={16} />
+                  </button>
+                </form>
+              )}
+
+              {/* 1-Click Instant Demo Persona Cards */}
+              <div className="luxury-quick-access-box">
+                <div className="luxury-quick-access-title">
+                  <Sparkles size={13} />
+                  <span>One-Click Instant Demo Credentials</span>
                 </div>
-                <span className="text-[11px] font-semibold text-primary">Fill</span>
-              </button>
-              <button
-                type="button"
-                className="w-full text-left p-2.5 rounded-lg border border-border hover:bg-muted/50 transition-colors flex items-center justify-between text-xs"
-                onClick={() => fillQuickDemo('admin@rora-luxury.com', 'Password123!')}
-              >
-                <div>
-                  <div className="font-medium text-foreground">Administrator (Full Access)</div>
-                  <div className="text-muted-foreground text-[11px]">admin@rora-luxury.com • Password123!</div>
+                <div className="luxury-persona-chips">
+                  <button
+                    type="button"
+                    className="luxury-persona-chip-btn"
+                    onClick={() => fillQuickDemo('sarah.customer@rora-luxury.com', 'Password123!')}
+                  >
+                    <div>
+                      <div className="luxury-chip-label">Sarah Customer (VIP Member)</div>
+                      <div className="luxury-chip-email">sarah.customer@rora-luxury.com • Password123!</div>
+                    </div>
+                    <span className="admin-badge">Auto Fill</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    className="luxury-persona-chip-btn"
+                    onClick={() => fillQuickDemo('admin@rora-luxury.com', 'Password123!')}
+                  >
+                    <div>
+                      <div className="luxury-chip-label">Super Administrator</div>
+                      <div className="luxury-chip-email">admin@rora-luxury.com • Password123!</div>
+                    </div>
+                    <span className="admin-badge">Auto Fill</span>
+                  </button>
                 </div>
-                <span className="text-[11px] font-semibold text-primary">Fill</span>
-              </button>
+              </div>
+
+              <div className="luxury-security-footer">
+                <ShieldCheck size={14} />
+                <span>256-Bit SSL Encrypted Studio Vault</span>
+              </div>
             </div>
           </div>
         </div>

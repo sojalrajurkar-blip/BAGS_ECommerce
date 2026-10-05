@@ -44,9 +44,10 @@ function mapBackendReview(r: BackendReviewDto): Review {
 export const reviewRepository = {
   async getAllReviews(): Promise<Review[]> {
     try {
-      const data = await apiClient.get<BackendReviewDto[]>('/reviews/featured');
-      if (Array.isArray(data) && data.length > 0) {
-        return data.map(mapBackendReview);
+      const data = await apiClient.get<BackendReviewDto[] | { content: BackendReviewDto[] }>('/reviews/featured');
+      const list = Array.isArray(data) ? data : (data?.content || []);
+      if (list.length > 0) {
+        return list.map(mapBackendReview);
       }
     } catch (err) {
       console.warn('Backend reviews API unavailable, fallback to local reviews:', err);
@@ -58,9 +59,10 @@ export const reviewRepository = {
     if (!productNameOrId) return this.getAllReviews();
 
     try {
-      const data = await apiClient.get<BackendReviewDto[]>(`/reviews/product/${productNameOrId}`);
-      if (Array.isArray(data) && data.length > 0) {
-        return data.map(mapBackendReview);
+      const data = await apiClient.get<BackendReviewDto[] | { content: BackendReviewDto[] }>(`/reviews/product/${productNameOrId}`);
+      const list = Array.isArray(data) ? data : (data?.content || []);
+      if (list.length > 0) {
+        return list.map(mapBackendReview);
       }
     } catch {
       // Fallback to searching local list

@@ -75,9 +75,15 @@ public class ReturnServiceImpl implements ReturnService {
                 BigDecimal totalPrice = unitPrice.multiply(BigDecimal.valueOf(itemReq.getQuantity()));
                 returnAmount = returnAmount.add(totalPrice);
 
-                String name = itemReq.getProductName();
-                if (itemReq.getColorName() != null && !itemReq.getColorName().trim().isEmpty()) {
-                    name += " (" + itemReq.getColorName() + ")";
+                String name = (itemReq.getProductName() != null && !itemReq.getProductName().trim().isEmpty())
+                        ? itemReq.getProductName().trim()
+                        : (orderItem != null && orderItem.getProductName() != null ? orderItem.getProductName() : "Luxury Item");
+                String color = (itemReq.getColorName() != null && !itemReq.getColorName().trim().isEmpty())
+                        ? itemReq.getColorName().trim()
+                        : (orderItem != null ? orderItem.getColorName() : null);
+
+                if (color != null && !color.isEmpty()) {
+                    name += " (" + color + ")";
                 }
                 if (primaryItemName == null) {
                     primaryItemName = name;
@@ -87,8 +93,8 @@ public class ReturnServiceImpl implements ReturnService {
                         .orderItemId(itemReq.getOrderItemId())
                         .productId(orderItem != null && orderItem.getProduct() != null ? orderItem.getProduct().getId() : null)
                         .variantId(orderItem != null && orderItem.getVariant() != null ? orderItem.getVariant().getId() : null)
-                        .productName(itemReq.getProductName())
-                        .colorName(itemReq.getColorName())
+                        .productName(name)
+                        .colorName(color)
                         .quantity(itemReq.getQuantity())
                         .unitPrice(unitPrice)
                         .totalPrice(totalPrice)

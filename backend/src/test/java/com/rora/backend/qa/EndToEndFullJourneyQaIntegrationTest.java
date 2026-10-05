@@ -268,7 +268,7 @@ public class EndToEndFullJourneyQaIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.orderNumber").value(orderNumber))
-                .andExpect(jsonPath("$.data.paymentStatus").value("Captured"));
+                .andExpect(jsonPath("$.data.paymentStatus").value("Pending"));
 
         // Obtain Admin Token for fulfillment & inspection
         LoginRequest adminAuth = LoginRequest.builder()

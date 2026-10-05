@@ -41,7 +41,19 @@ export const returnRepository = {
    * Submits a customer return request for an order.
    */
   async createReturn(payload: CreateReturnPayload): Promise<ReturnRecordDto> {
-    return apiClient.post<ReturnRecordDto>('/returns', payload);
+    const backendPayload = {
+      orderIdOrNumber: payload.orderNumber || payload.orderId,
+      reason: payload.reason,
+      customerNotes: payload.customerNotes || '',
+      items: [
+        {
+          productName: payload.item || 'Luxury Item',
+          quantity: 1,
+          returnReason: payload.reason,
+        },
+      ],
+    };
+    return apiClient.post<ReturnRecordDto>('/returns', backendPayload);
   },
 
   /**

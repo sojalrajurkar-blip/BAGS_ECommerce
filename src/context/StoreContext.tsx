@@ -213,6 +213,18 @@ export const StoreProvider = ({ children }: { children: React.ReactNode }) => {
     authRepository.getCurrentUser().then(u => {
       if (u) setUser(u);
     });
+
+    productRepository.getProducts().then(prods => {
+      if (prods && prods.length > 0) {
+        setAdminProducts(prods);
+      }
+    }).catch(() => {});
+
+    categoryRepository.getCategories().then(cats => {
+      if (cats && cats.length > 0) {
+        setAdminCategories(cats);
+      }
+    }).catch(() => {});
   }, []);
 
   // Load orders & wishlist when auth changes
@@ -399,12 +411,13 @@ export const StoreProvider = ({ children }: { children: React.ReactNode }) => {
 
   const applyCoupon = async (code: string) => {
     const cleanCode = code.trim().toUpperCase();
-    const found = await couponRepository.validateCoupon(cleanCode);
+    const currentSubtotal = cart.reduce((sum, item) => sum + (item.price || item.product.price) * item.quantity, 0);
+    const found = await couponRepository.validateCoupon(cleanCode, currentSubtotal);
     if (found) {
       setAppliedCoupon(found);
       cartRepository.applyCoupon(cleanCode).catch(() => {});
-      addToast(`Coupon "${found.code}" applied: ${found.discountPercent}% off!`);
-      return { success: true, message: `Coupon applied: ${found.discountPercent}% off` };
+      addToast(`Coupon "${found.code}" applied: ${found.discountPercent || found.discountValue}% off!`);
+      return { success: true, message: `Coupon applied: ${found.discountPercent || found.discountValue}% off` };
     } else {
       addToast('Invalid coupon code. Try "RORA10"', 'error');
       return { success: false, message: 'Invalid coupon code.' };

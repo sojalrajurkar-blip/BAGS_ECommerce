@@ -130,7 +130,7 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
   const response = await fetch(url, fetchConfig);
 
   // Parse response body
-  let data: any;
+  let data: unknown;
   const contentType = response.headers.get('content-type');
   if (contentType && contentType.includes('application/json')) {
     data = await response.json();
@@ -139,16 +139,18 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
   }
 
   if (!response.ok) {
-    const errorMessage = data?.message || data?.error || `HTTP ${response.status}: ${response.statusText}`;
-    const error = new Error(errorMessage);
-    (error as any).status = response.status;
-    (error as any).data = data;
+    const errorPayload = typeof data === 'object' && data !== null ? (data as Record<string, unknown>) : null;
+    const errorMessage = (errorPayload?.message as string) || (errorPayload?.error as string) || `HTTP ${response.status}: ${response.statusText}`;
+    const error = Object.assign(new Error(errorMessage), {
+      status: response.status,
+      data,
+    });
     throw error;
   }
 
   // If backend wrapped in ApiResponse<T>, unwrap data property
   if (data && typeof data === 'object' && 'data' in data && 'success' in data) {
-    return data.data as T;
+    return (data as { data: T }).data;
   }
 
   return data as T;

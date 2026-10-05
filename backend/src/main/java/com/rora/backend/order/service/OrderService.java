@@ -79,7 +79,7 @@ public class OrderService {
                 .shippingAddress(request.getShippingAddress())
                 .billingAddress(request.getBillingAddress() != null ? request.getBillingAddress() : request.getShippingAddress())
                 .paymentMethod(request.getPaymentMethod() != null ? request.getPaymentMethod() : "Mock Gateway")
-                .paymentStatus("Captured")
+                .paymentStatus("Pending")
                 .status("Processing")
                 .carrier("Bluedart Express")
                 .estimatedDelivery("2-4 Business Days")
