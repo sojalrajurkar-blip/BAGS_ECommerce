@@ -35,4 +35,7 @@ next-env.d.ts
 # backend maven
 backend/target/
 .env
+.env.*
+backend/.env
+backend/.env.*
 desgin_reference/

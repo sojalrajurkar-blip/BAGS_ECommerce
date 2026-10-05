@@ -93,6 +93,7 @@ INSERT INTO cms_content (id, content_key, title, content_data, created_at, updat
             "image": "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&w=1200&q=80"
         }
     }'::jsonb,
+    CURRENT_TIMESTAMP,
     CURRENT_TIMESTAMP
 )
 ON CONFLICT (content_key) DO UPDATE SET
