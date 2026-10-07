@@ -10,6 +10,8 @@ import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 public class RoraBackendApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(RoraBackendApplication.class, args);
+        SpringApplication app = new SpringApplication(RoraBackendApplication.class);
+        app.addInitializers(new com.rora.backend.config.DatasourceDiagnosticInitializer());
+        app.run(args);
     }
 }
