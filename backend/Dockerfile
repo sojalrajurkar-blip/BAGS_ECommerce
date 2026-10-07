@@ -35,7 +35,7 @@ USER rora:rora
 # Environment configuration
 ENV SPRING_PROFILES_ACTIVE=prod \
     PORT=8080 \
-    JAVA_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -Djava.security.egd=file:/dev/./urandom"
+    JAVA_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -Djava.security.egd=file:/dev/./urandom -Djava.net.preferIPv4Stack=true"
 
 EXPOSE 8080
 

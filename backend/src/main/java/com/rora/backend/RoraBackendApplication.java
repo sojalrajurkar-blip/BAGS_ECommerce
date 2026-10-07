@@ -16,6 +16,9 @@ public class RoraBackendApplication {
     private static final Pattern JDBC_PATTERN = Pattern.compile("^jdbc:postgresql://([^:/]+)(?::(\\d+))?/([^?]+)(?:\\?(.*))?$");
 
     public static void main(String[] args) {
+        // Enforce IPv4 network stack preference before any network/socket operations
+        System.setProperty("java.net.preferIPv4Stack", "true");
+
         // Guaranteed raw console diagnostic executed before any Spring subsystem loads
         printEarlyDiagnostics();
 
