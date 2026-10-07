@@ -30,14 +30,15 @@ public class DatasourceDiagnosticInitializer implements ApplicationContextInitia
         String springDsUrlEnv = env.getProperty("SPRING_DATASOURCE_URL");
         String databaseUrlEnv = env.getProperty("DATABASE_URL");
 
-        logger.info("================================================================================");
-        logger.info("[STARTUP-DIAGNOSTIC] Active Spring Profiles: [{}]", activeProfiles.isBlank() ? "default" : activeProfiles);
+        System.out.println("[STARTUP-DIAGNOSTIC] Environment Resolved Profiles: [" + (activeProfiles.isBlank() ? "default" : activeProfiles) + "]");
 
         if (springDsUrlEnv != null && !springDsUrlEnv.isBlank()) {
             logger.warn("[STARTUP-DIAGNOSTIC] Detected SPRING_DATASOURCE_URL in environment: host={}", extractHostSafely(springDsUrlEnv));
+            System.out.println("[STARTUP-DIAGNOSTIC] Detected SPRING_DATASOURCE_URL in environment: host=" + extractHostSafely(springDsUrlEnv));
         }
         if (databaseUrlEnv != null && !databaseUrlEnv.isBlank()) {
             logger.warn("[STARTUP-DIAGNOSTIC] Detected DATABASE_URL in environment: host={}", extractHostSafely(databaseUrlEnv));
+            System.out.println("[STARTUP-DIAGNOSTIC] Detected DATABASE_URL in environment: host=" + extractHostSafely(databaseUrlEnv));
         }
         if (dbUrlEnv != null && !dbUrlEnv.isBlank()) {
             logger.info("[STARTUP-DIAGNOSTIC] Detected DB_URL in environment: host={}", extractHostSafely(dbUrlEnv));
@@ -53,19 +54,27 @@ public class DatasourceDiagnosticInitializer implements ApplicationContextInitia
 
                 logger.info("[STARTUP-DIAGNOSTIC] Effective Datasource Target: host={}, port={}, database={}", host, port, dbName);
                 logger.info("[STARTUP-DIAGNOSTIC] Effective JDBC Query Params: {}", sanitizeQueryParams(queryParams));
+                System.out.println("[STARTUP-DIAGNOSTIC] Effective Spring Datasource Target: host=" + host + ", port=" + port + ", database=" + dbName);
+                System.out.println("[STARTUP-DIAGNOSTIC] Effective Spring JDBC Query Params: " + sanitizeQueryParams(queryParams));
             } else {
                 logger.info("[STARTUP-DIAGNOSTIC] Effective Datasource URL format: host={}", extractHostSafely(rawUrl));
+                System.out.println("[STARTUP-DIAGNOSTIC] Effective Spring Datasource URL format: host=" + extractHostSafely(rawUrl));
             }
         } else {
             logger.error("[STARTUP-DIAGNOSTIC] No spring.datasource.url resolved!");
+            System.out.println("[STARTUP-DIAGNOSTIC] No spring.datasource.url resolved!");
         }
 
         if (rawUsername != null) {
             boolean hasTenantSuffix = rawUsername.contains(".");
             logger.info("[STARTUP-DIAGNOSTIC] Effective Username: {} (Tenant-qualified: {})", rawUsername, hasTenantSuffix);
+            System.out.println("[STARTUP-DIAGNOSTIC] Effective Spring Username: " + rawUsername + " (Tenant-qualified: " + hasTenantSuffix + ")");
         } else {
             logger.error("[STARTUP-DIAGNOSTIC] No spring.datasource.username resolved!");
+            System.out.println("[STARTUP-DIAGNOSTIC] No spring.datasource.username resolved!");
         }
+        System.out.println("================================================================================");
+        System.out.flush();
         logger.info("================================================================================");
     }
 
