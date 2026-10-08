@@ -86,6 +86,7 @@ export const RoraProductSequence: React.FC<RoraProductSequenceProps> = ({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const imagesRef = useRef<(HTMLImageElement | null)[]>([]);
   const currentFrameRef = useRef<number>(0);
+  const scrollProgressRef = useRef<number>(0);
   const triggerRef = useRef<ScrollTrigger | null>(null);
 
   const [firstFrameLoaded, setFirstFrameLoaded] = useState<boolean>(false);
@@ -159,25 +160,38 @@ export const RoraProductSequence: React.FC<RoraProductSequenceProps> = ({
       const imgRatio = imgWidth / imgHeight;
       const canvasRatio = canvasWidth / canvasHeight;
 
+      const isDesktopHero = isHeroMode && canvasWidth >= 900;
+      const scaleFactor = isDesktopHero ? 0.72 : (isHeroMode ? 0.58 : 0.82);
+
       let renderWidth = canvasWidth;
       let renderHeight = canvasHeight;
-      let offsetX = 0;
-      let offsetY = 0;
-
-      // Generous luxury contain framing with comfortable margins
-      const scaleFactor = isHeroMode ? 0.78 : 0.82;
-      const verticalOffset = isHeroMode ? canvasHeight * 0.03 : 0;
 
       if (canvasRatio > imgRatio) {
         renderHeight = canvasHeight * scaleFactor;
         renderWidth = renderHeight * imgRatio;
-        offsetX = (canvasWidth - renderWidth) / 2;
-        offsetY = (canvasHeight - renderHeight) / 2 + verticalOffset;
       } else {
-        renderWidth = canvasWidth * 0.86;
+        renderWidth = canvasWidth * (isDesktopHero ? 0.46 : (isHeroMode ? 0.72 : 0.86));
         renderHeight = renderWidth / imgRatio;
-        offsetX = (canvasWidth - renderWidth) / 2;
-        offsetY = (canvasHeight - renderHeight) / 2 + verticalOffset;
+      }
+
+      let offsetX = (canvasWidth - renderWidth) / 2;
+      let offsetY = (canvasHeight - renderHeight) / 2;
+
+      const curProgress = scrollProgressRef.current;
+
+      if (isDesktopHero) {
+        // At progress = 0: Place the bag in the right half (center of right half is 68%)
+        // As scrollProgress increases to 0.15: smooth glide to center
+        const progressFactor = Math.min(1, curProgress / 0.15);
+        const startX = canvasWidth * 0.68 - renderWidth / 2;
+        const endX = (canvasWidth - renderWidth) / 2;
+        offsetX = startX + (endX - startX) * progressFactor;
+      } else if (isHeroMode) {
+        // Mobile / Tablet: Position the bag below the top text
+        const progressFactor = Math.min(1, curProgress / 0.15);
+        const startY = canvasHeight * 0.60 - renderHeight / 2;
+        const endY = (canvasHeight - renderHeight) / 2;
+        offsetY = startY + (endY - startY) * progressFactor;
       }
 
       ctx.imageSmoothingEnabled = true;
@@ -318,6 +332,7 @@ export const RoraProductSequence: React.FC<RoraProductSequenceProps> = ({
         scrub: 0.4,
         onUpdate: (self) => {
           const rawProgress = self.progress;
+          scrollProgressRef.current = rawProgress;
           setScrollProgress(rawProgress);
 
           // Calculate continuous frame index
@@ -379,22 +394,15 @@ export const RoraProductSequence: React.FC<RoraProductSequenceProps> = ({
           background: 'radial-gradient(ellipse at center, #1F1E1A 0%, #141311 80%)',
         }}
       >
-        {/* Top Floating Editorial Eyebrow & Hero Header */}
+        {/* Top Floating / Editorial Side Eyebrow & Hero Header */}
         <header
-          className="sequence-header"
+          className={`sequence-header ${isHeroMode ? 'sequence-header-hero' : 'sequence-header-standard'}`}
           style={{
-            position: 'absolute',
-            top: isHeroMode ? '2.25rem' : '2.5rem',
-            left: '50%',
-            transform: `translate(-50%, ${headerTranslateY}px)`,
             opacity: headerOpacity,
+            transform: isHeroMode
+              ? `translateY(calc(-50% + ${headerTranslateY}px))`
+              : `translate(-50%, ${headerTranslateY}px)`,
             pointerEvents: isHeaderVisible ? 'auto' : 'none',
-            textAlign: 'center',
-            zIndex: 10,
-            width: '90%',
-            maxWidth: '680px',
-            transition: 'opacity 0.15s ease-out, transform 0.15s ease-out',
-            textShadow: '0 2px 16px rgba(0, 0, 0, 0.85)',
           }}
         >
           <div
@@ -411,48 +419,22 @@ export const RoraProductSequence: React.FC<RoraProductSequenceProps> = ({
               letterSpacing: '0.14em',
               textTransform: 'uppercase',
               color: '#C9B99F',
-              marginBottom: '0.6rem',
+              marginBottom: '0.8rem',
             }}
           >
             <Sparkles size={12} />
             <span>{eyebrow}</span>
           </div>
-          <h2
-            style={{
-              fontFamily: 'var(--font-display, serif)',
-              fontSize: 'clamp(1.75rem, 3.2vw, 2.75rem)',
-              fontWeight: 400,
-              letterSpacing: '-0.02em',
-              margin: '0 0 0.4rem 0',
-              color: '#F7F4EE',
-              lineHeight: 1.1,
-            }}
-          >
+          <h2 className="sequence-header-title">
             {title}
           </h2>
-          <p
-            style={{
-              fontSize: '0.875rem',
-              color: 'rgba(247, 244, 238, 0.65)',
-              margin: '0 0 1rem 0',
-              fontFamily: 'var(--font-body, sans-serif)',
-            }}
-          >
+          <p className="sequence-header-desc">
             {description}
           </p>
 
           {/* Optional Hero CTAs */}
           {(primaryCtaText || secondaryCtaText) && (
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '0.85rem',
-                pointerEvents: 'auto',
-                marginTop: '0.5rem',
-              }}
-            >
+            <div className="sequence-cta-group">
               {primaryCtaText && (
                 <button
                   type="button"
@@ -462,8 +444,8 @@ export const RoraProductSequence: React.FC<RoraProductSequenceProps> = ({
                     backgroundColor: '#C9B99F',
                     color: '#141311',
                     fontWeight: 500,
-                    padding: '0.65rem 1.4rem',
-                    fontSize: '0.85rem',
+                    padding: '0.75rem 1.6rem',
+                    fontSize: '0.875rem',
                     borderRadius: '999px',
                     border: 'none',
                     cursor: 'pointer',
@@ -484,8 +466,8 @@ export const RoraProductSequence: React.FC<RoraProductSequenceProps> = ({
                     backgroundColor: 'rgba(255, 255, 255, 0.08)',
                     color: '#F7F4EE',
                     fontWeight: 400,
-                    padding: '0.65rem 1.4rem',
-                    fontSize: '0.85rem',
+                    padding: '0.75rem 1.6rem',
+                    fontSize: '0.875rem',
                     borderRadius: '999px',
                     border: '1px solid rgba(255, 255, 255, 0.2)',
                     backdropFilter: 'blur(8px)',
