@@ -551,20 +551,8 @@ export const RoraProductSequence: React.FC<RoraProductSequenceProps> = ({
           </div>
         )}
 
-        {/* Floating Storytelling Phase Overlays */}
-        <div
-          className="sequence-phase-container"
-          style={{
-            position: 'absolute',
-            bottom: '2.5rem',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            width: '90%',
-            maxWidth: '520px',
-            zIndex: 15,
-            pointerEvents: 'none',
-          }}
-        >
+        {/* Floating Storytelling Phase Overlays (Side Positioned) */}
+        <div className="sequence-phase-container">
           {phases.map((phase, idx) => {
             const isVisible =
               scrollProgress >= phase.startProgress && scrollProgress <= phase.endProgress;
@@ -572,6 +560,7 @@ export const RoraProductSequence: React.FC<RoraProductSequenceProps> = ({
             return (
               <div
                 key={phase.phase}
+                className="sequence-phase-card"
                 style={{
                   position: idx === activePhaseIndex ? 'relative' : 'absolute',
                   inset: 0,
@@ -579,14 +568,7 @@ export const RoraProductSequence: React.FC<RoraProductSequenceProps> = ({
                   transform: isVisible
                     ? 'translateY(0px)'
                     : 'translateY(16px)',
-                  transition: 'opacity 0.4s ease, transform 0.4s ease',
-                  padding: '1.25rem 1.5rem',
-                  borderRadius: '12px',
-                  backgroundColor: 'rgba(20, 19, 17, 0.85)',
-                  border: '1px solid rgba(201, 185, 159, 0.2)',
-                  backdropFilter: 'blur(20px)',
-                  boxShadow: '0 24px 48px rgba(0, 0, 0, 0.6)',
-                  textAlign: 'left',
+                  pointerEvents: isVisible ? 'auto' : 'none',
                 }}
               >
                 <div
@@ -653,23 +635,11 @@ export const RoraProductSequence: React.FC<RoraProductSequenceProps> = ({
           })}
         </div>
 
-        {/* Bottom Scroll Indicator / Scrub Tracker */}
-        <div
-          style={{
-            position: 'absolute',
-            bottom: '1rem',
-            left: '50%',
-            transform: 'translateX(-50%)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.75rem',
-            zIndex: 10,
-            pointerEvents: 'none',
-          }}
-        >
+        {/* Bottom Scroll Indicator / Scrub Tracker (Side Positioned) */}
+        <div className="sequence-scrub-tracker">
           <div
             style={{
-              width: '120px',
+              width: '100px',
               height: '3px',
               borderRadius: '999px',
               backgroundColor: 'rgba(255, 255, 255, 0.15)',
