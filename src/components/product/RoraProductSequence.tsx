@@ -42,16 +42,16 @@ const DEFAULT_PHASES: SequencePhase[] = [
     title: 'CRAFTED TO LAST',
     subtitle: 'Sculptural silhouette formed from full-grain Tuscan calfskin, tanned naturally with plant extracts for an enduring patina.',
     badge: 'Artisan Material',
-    startProgress: 0.05,
-    endProgress: 0.32,
+    startProgress: 0.14,
+    endProgress: 0.38,
   },
   {
     phase: 'PHASE 02',
     title: 'DETAIL IN EVERY STITCH',
     subtitle: 'Reinforced saddle stitching with wax-coated German thread, micro-beveled edges, and hand-brushed brass hardware.',
     badge: 'Precision Atelier',
-    startProgress: 0.38,
-    endProgress: 0.66,
+    startProgress: 0.42,
+    endProgress: 0.68,
   },
   {
     phase: 'PHASE 03',
@@ -164,17 +164,20 @@ export const RoraProductSequence: React.FC<RoraProductSequenceProps> = ({
       let offsetX = 0;
       let offsetY = 0;
 
-      // Generous luxury contain framing
+      // Generous luxury contain framing with comfortable margins
+      const scaleFactor = isHeroMode ? 0.78 : 0.82;
+      const verticalOffset = isHeroMode ? canvasHeight * 0.03 : 0;
+
       if (canvasRatio > imgRatio) {
-        renderHeight = canvasHeight * 0.86;
+        renderHeight = canvasHeight * scaleFactor;
         renderWidth = renderHeight * imgRatio;
         offsetX = (canvasWidth - renderWidth) / 2;
-        offsetY = (canvasHeight - renderHeight) / 2;
+        offsetY = (canvasHeight - renderHeight) / 2 + verticalOffset;
       } else {
-        renderWidth = canvasWidth * 0.90;
+        renderWidth = canvasWidth * 0.86;
         renderHeight = renderWidth / imgRatio;
         offsetX = (canvasWidth - renderWidth) / 2;
-        offsetY = (canvasHeight - renderHeight) / 2;
+        offsetY = (canvasHeight - renderHeight) / 2 + verticalOffset;
       }
 
       ctx.imageSmoothingEnabled = true;
@@ -182,7 +185,7 @@ export const RoraProductSequence: React.FC<RoraProductSequenceProps> = ({
       ctx.drawImage(img, offsetX, offsetY, renderWidth, renderHeight);
       ctx.restore();
     },
-    [frameCount]
+    [frameCount, isHeroMode]
   );
 
   /**
@@ -342,6 +345,13 @@ export const RoraProductSequence: React.FC<RoraProductSequenceProps> = ({
     };
   }, [reducedMotion, frameCount, phases, drawFrame]);
 
+  // Dynamic Scroll Fade for Hero Header
+  const headerOpacity = isHeroMode
+    ? Math.max(0, 1 - scrollProgress * 7.5)
+    : Math.max(0, 1 - scrollProgress * 6.5);
+  const headerTranslateY = -scrollProgress * 40;
+  const isHeaderVisible = headerOpacity > 0.02;
+
   return (
     <section
       ref={containerRef}
@@ -366,21 +376,25 @@ export const RoraProductSequence: React.FC<RoraProductSequenceProps> = ({
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
+          background: 'radial-gradient(ellipse at center, #1F1E1A 0%, #141311 80%)',
         }}
       >
-        {/* Top Floating Editorial Eyebrow */}
+        {/* Top Floating Editorial Eyebrow & Hero Header */}
         <header
           className="sequence-header"
           style={{
             position: 'absolute',
-            top: '2.5rem',
+            top: isHeroMode ? '2.25rem' : '2.5rem',
             left: '50%',
-            transform: 'translateX(-50%)',
+            transform: `translate(-50%, ${headerTranslateY}px)`,
+            opacity: headerOpacity,
+            pointerEvents: isHeaderVisible ? 'auto' : 'none',
             textAlign: 'center',
             zIndex: 10,
-            pointerEvents: 'none',
             width: '90%',
             maxWidth: '680px',
+            transition: 'opacity 0.15s ease-out, transform 0.15s ease-out',
+            textShadow: '0 2px 16px rgba(0, 0, 0, 0.85)',
           }}
         >
           <div
@@ -542,11 +556,11 @@ export const RoraProductSequence: React.FC<RoraProductSequenceProps> = ({
           className="sequence-phase-container"
           style={{
             position: 'absolute',
-            bottom: '3rem',
+            bottom: '2.5rem',
             left: '50%',
             transform: 'translateX(-50%)',
             width: '90%',
-            maxWidth: '560px',
+            maxWidth: '520px',
             zIndex: 15,
             pointerEvents: 'none',
           }}
@@ -568,10 +582,10 @@ export const RoraProductSequence: React.FC<RoraProductSequenceProps> = ({
                   transition: 'opacity 0.4s ease, transform 0.4s ease',
                   padding: '1.25rem 1.5rem',
                   borderRadius: '12px',
-                  backgroundColor: 'rgba(26, 25, 22, 0.75)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                  backdropFilter: 'blur(16px)',
-                  boxShadow: '0 20px 40px rgba(0, 0, 0, 0.4)',
+                  backgroundColor: 'rgba(20, 19, 17, 0.85)',
+                  border: '1px solid rgba(201, 185, 159, 0.2)',
+                  backdropFilter: 'blur(20px)',
+                  boxShadow: '0 24px 48px rgba(0, 0, 0, 0.6)',
                   textAlign: 'left',
                 }}
               >
